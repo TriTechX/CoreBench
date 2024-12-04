@@ -42,7 +42,7 @@ def loadingScreen():
             os.system("clear")
     
     global endLoad
-
+    clear()
     while endLoad == False:
         
         print(colours.cyan() + """░█████╗░░█████╗░██████╗░███████╗""")
