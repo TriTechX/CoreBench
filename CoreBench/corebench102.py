@@ -36,7 +36,7 @@ def loadingScreen():
     def clear():
         
         name = str(os.name)
-        if name == "nt":
+        if name in ["nt","dos"]:
             os.system("cls")
         else:
             os.system("clear")
@@ -143,7 +143,12 @@ def prettyPrintData():
 
 #set clear() to clear the screen
 def clear():
-    os.system("clear")
+
+    name = str(os.name)
+    if name in ["nt","dos"]:
+        os.system("cls")
+    else:
+        os.system("clear")
 
 N = 1000000
 #intensity of the test, point system will not scale with intensity
@@ -536,11 +541,10 @@ def fullCPUTest():
     def clear():
 
         name = str(os.name)
-        if name == "nt":
+        if name in ["nt","dos"]:
             os.system("cls")
         else:
             os.system("clear")
-            
     singleCoreScore = singleCore()
     multiCoreScore = multiCore()
     multiThreadScore = multiThread()
