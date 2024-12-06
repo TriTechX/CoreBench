@@ -39,6 +39,14 @@ This bench is more accurate on lower-end systems running Core. High end systems 
   - Content: This is a request for the data for [INSERT HOSTNAME HERE].
 - No sensitive data is collected by this program.
 
+
+### Installation
+- Download version ```3.10.14``` of Python.
+- Download files ```main.py```, ```colours.py```, and ```requirements.txt```
+- Put them all in the same directory.
+- Enter this directory and run ```pip install -r requirements.txt```
+- Then run ```python3 main.py```
+
 ### Info and Devlog
 
 #### Version 1.0.0
