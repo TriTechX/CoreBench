@@ -41,13 +41,20 @@ This bench is more accurate on lower-end systems running Core. High end systems 
 
 
 ### Installation
+#### Linux/Mac
 - Download version ```3.10.14``` of Python.
 - Download files ```main.py```, ```colours.py```, and ```requirements.txt```
 - Put them all in the same directory.
 - Enter this directory and run ```pip install -r requirements.txt```
 - Then run ```python3 main.py```
-
+#### Windows
+- Extract and run ```corebench.exe```
+- A disclaimer may appear that says "Windows Protected Your PC". This is not a virus warning, it simply means that this software is unverified. Click "advanced" and "run anyway".
+#### Core OS
+- Coming soon™
 ### Info and Devlog
+
+Windows users may run into issues such as lower scores, longer loading times, and inefficient hardware utilization. Higher end systems on Windows may achieve low scores compared to Linux users as the benchmark was designed for Linux. 
 
 #### Version 1.0.0
 - As of CoreBench version 1.0.0, there is no storage of data. There may be in future updates when a simple cloud solution is found.
@@ -68,3 +75,6 @@ This bench is more accurate on lower-end systems running Core. High end systems 
 - Improved readability of test select menu.
 - Renamed "info.txt" to "corebenchinfo.txt" as the name was too generic, and removal of this file could cause issues if the file is for other applications.
 - Added all test results to full CPU performance test results screen.
+
+#### Version 1.0.3
+- Added checks for administrator/root permissions on startup
