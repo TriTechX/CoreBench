@@ -6,6 +6,7 @@ import multiprocessing
 import threading
 import math
 import platform
+import ctypes
 #Third-party packages
 import cpuinfo
 import psutil
@@ -13,6 +14,23 @@ import GPUtil
 from pick import pick
 #Custom packages
 import colours
+
+if str(os.name) in ["nt", "dos"]:
+    def checkRoot():
+        try:
+            return ctypes.windll.shell32.IsUserAnAdmin() != 0
+        except:
+            return False
+else:
+    def checkRoot():
+        return os.geteuid() == 0
+
+if checkRoot:
+    pass
+else:
+    print(colours.red() + "This script needs to be run as administrator, bugs may occur." + colours.reset())
+    temp = input(colours.grey() + "Press [ENTER] to continue..." + colours.reset())
+    
 
 #Get system information
 def getData():
@@ -59,6 +77,7 @@ def loadingScreen():
         print("""██████╦╝███████╗██║░╚███║╚█████╔╝██║░░██║""")
         print("""╚═════╝░╚══════╝╚═╝░░╚══╝░╚════╝░╚═╝░░╚═╝""")
         print(colours.reset())
+        print(colours.grey() + "© TriTech 2024 - If you paid for this software, get a refund." + colours.reset())
         time.sleep(0.3)
         clear()
         print(colours.magenta() + """░█████╗░░█████╗░██████╗░███████╗""")
@@ -75,6 +94,7 @@ def loadingScreen():
         print("""██████╦╝███████╗██║░╚███║╚█████╔╝██║░░██║""")
         print("""╚═════╝░╚══════╝╚═╝░░╚══╝░╚════╝░╚═╝░░╚═╝""")
         print(colours.reset())
+        print(colours.grey() + "© TriTech 2024 - If you paid for this software, get a refund." + colours.reset())
         time.sleep(0.3)
         clear()
         print(colours.green() + """░█████╗░░█████╗░██████╗░███████╗""")
@@ -91,6 +111,7 @@ def loadingScreen():
         print("""██████╦╝███████╗██║░╚███║╚█████╔╝██║░░██║""")
         print("""╚═════╝░╚══════╝╚═╝░░╚══╝░╚════╝░╚═╝░░╚═╝""")
         print(colours.reset())
+        print(colours.grey() + "© TriTech 2024 - If you paid for this software, get a refund." + colours.reset())
         time.sleep(0.3)
         clear()
 
