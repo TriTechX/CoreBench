@@ -97,3 +97,4 @@ Windows users may run into issues such as lower scores, longer loading times, an
 - Removed the 4 decimal place CPU clock speed response and rounded it to 2 decimal places as is standard.
 - Updated core count to count physical CPU cores, and added a seperate info tab for threads - ruining my colour scheme >:(
 - Neofetch is now a dependency of CoreBench. The reason why is... dumb
+- Results stored in ```corebenchinfo.txt``` are stored alongside the date and time they were performed
