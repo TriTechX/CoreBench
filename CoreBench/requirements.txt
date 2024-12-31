@@ -2,4 +2,5 @@ py-cpuinfo
 psutil
 GPUtil
 pick
+distutils
 setuptools
