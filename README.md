@@ -41,40 +41,59 @@ This bench is more accurate on lower-end systems running Core. High end systems 
 
 
 ### Installation
-#### Linux/Mac
+#### Linux
 - Download version ```3.10.14``` of Python.
 - Download files ```main.py```, ```colours.py```, and ```requirements.txt```
 - Put them all in the same directory.
 - Enter this directory and run ```pip install -r requirements.txt```
+- Run ```sudo apt install neofetch```
 - Then run ```python3 main.py```
 #### Windows
-- Extract and run ```corebench.exe```
-- A disclaimer may appear that says "Windows Protected Your PC". This is not a virus warning, it simply means that this software is unverified. Click "advanced" and "run anyway".
+- **WINDOWS IS CURRENTLY UNSUPPORTED**
+#### MacOS
+- MacOS has not been tested.
 #### Core OS
 - Coming soon™
+
+
 ### Info and Devlog
 
-Windows users may run into issues such as lower scores, longer loading times, and inefficient hardware utilization. Higher end systems on Windows may achieve low scores compared to Linux users as the benchmark was designed for Linux. 
+Windows users may run into issues such as lower scores, longer loading times, and inefficient hardware utilization. Higher end systems on Windows may achieve low scores compared to Linux users as the benchmark was designed for Linux
 
 #### Version 1.0.0
-- As of CoreBench version 1.0.0, there is no storage of data. There may be in future updates when a simple cloud solution is found.
-- This program lacks the ability to run GPU tests, it is currently limited to CPU single core, multi core, and multi thread benchmarks.
-- This program lacks testing data, so what can be considered "good" and "bad" has not been determined yet, so scores are currently arbitrary. Feel free after executing this program to send me your info and scores at TriTechUX@gmail.com. 
-- During multicore and multithread tests, multiple lines of text will show for the progress of the different operations.
+- As of CoreBench version 1.0.0, there is no storage of data. There may be in future updates when a simple cloud solution is found
+- This program lacks the ability to run GPU tests, it is currently limited to CPU single core, multi core, and multi thread benchmarks
+- This program lacks testing data, so what can be considered "good" and "bad" has not been determined yet, so scores are currently arbitrary. Feel free after executing this program to send me your info and scores at TriTechUX@gmail.com
+- During multicore and multithread tests, multiple lines of text will show for the progress of the different operations
 
 #### Version 1.0.1
-- Changed RAM to calculate more accurately by showing two decimal places.
-- Fixed misnaming of "totalTime" variable in the single core test.
-- Optimised to run faster and obtain more accurate scores representative of the system.
-- Fixed stage 3 single core test percentage going up in multiples of 2 instead of 1.
-- Fixed stage 2 multicore/multithread test progress showing one decimal place instead of only one significant figure.
-- Balanced single core scores to be higher and more representative of the system's power.
+- Changed RAM to calculate more accurately by showing two decimal places
+- Fixed misnaming of "totalTime" variable in the single core test
+- Optimised to run faster and obtain more accurate scores representative of the system
+- Fixed stage 3 single core test percentage going up in multiples of 2 instead of 1
+- Fixed stage 2 multicore/multithread test progress showing one decimal place instead of only one significant figure
+- Balanced single core scores to be higher and more representative of the system's power
 
 #### Version 1.0.2
-- Added full CPU performance test.
-- Improved readability of test select menu.
-- Renamed "info.txt" to "corebenchinfo.txt" as the name was too generic, and removal of this file could cause issues if the file is for other applications.
-- Added all test results to full CPU performance test results screen.
+- Added full CPU performance test
+- Improved readability of test select menu
+- Renamed "info.txt" to "corebenchinfo.txt" as the name was too generic, and removal of this file could cause issues if the file is for other applications
+- Added all test results to full CPU performance test results screen
 
 #### Version 1.0.3
 - Added checks for administrator/root permissions on startup
+
+#### Version 1.0.4
+- Aimed to fix a few small issues with text formatting and RAM calculations
+- Added specific Linux distro identification to make recording results easier
+- Full CPU test no longer flashes results from each individual test
+- Full CPU test results are now stored to file ```corebenchinfo.txt```
+- Added a timer cooldown between successive tests on the full CPU test
+- Fixed multithread test results being bottlenecked by I/O operations and percentage calculations
+- Fixed multithread epilepsy effect
+- Fixed a very intellectual bug that meant that the script wouldn't correctly check for admin privileges on Linux/MacOS (totally didn't use os.geteuid() instead of os.getuid())
+- Did the same fix to the multiprocessing test as the multithread test.
+- Added compatibility with CPU temperature monitoring. This project may require lm_sensors in the future.
+- Removed the 4 decimal place CPU clock speed response and rounded it to 2 decimal places as is standard.
+- Updated core count to count physical CPU cores, and added a seperate info tab for threads - ruining my colour scheme >:(
+- Neofetch is now a dependency of CoreBench. The reason why is... dumb
