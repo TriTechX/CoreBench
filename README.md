@@ -41,24 +41,21 @@ This bench is more accurate on lower-end systems running Core. High end systems 
 
 
 ### Installation
-#### Linux
-- Download version ```3.10.14``` of Python.
+#### Linux/Mac
+- Download version ```3.10.14```+ of Python.
 - Download files ```main.py```, ```colours.py```, and ```requirements.txt```
 - Put them all in the same directory.
 - Enter this directory and run ```pip install -r requirements.txt```
-- Run ```sudo apt install neofetch```
 - Then run ```python3 main.py```
+- Linux portable image coming soon™
+- dmg will never exist
 #### Windows
 - **WINDOWS IS CURRENTLY UNSUPPORTED**
-#### MacOS
-- MacOS has not been tested.
 #### Core OS
 - Coming soon™
-
-
 ### Info and Devlog
 
-Windows users may run into issues such as lower scores, longer loading times, and inefficient hardware utilization. Higher end systems on Windows may achieve low scores compared to Linux users as the benchmark was designed for Linux
+Users running on Windows through Python interpreters may run into issues such as absurdly low scores, much longer loading times, and inefficient hardware utilization. The multicore method used in this program is NOT compatible with Windows. Higher end systems on Windows may achieve low scores compared to Linux users, as the benchmark was designed for Linux. If you desperately want to run this and get accurate results, I guess you could make a tiny partition for dual booting a Linux distro.
 
 #### Version 1.0.0
 - As of CoreBench version 1.0.0, there is no storage of data. There may be in future updates when a simple cloud solution is found
@@ -96,5 +93,19 @@ Windows users may run into issues such as lower scores, longer loading times, an
 - Added compatibility with CPU temperature monitoring. This project may require lm_sensors in the future.
 - Removed the 4 decimal place CPU clock speed response and rounded it to 2 decimal places as is standard.
 - Updated core count to count physical CPU cores, and added a seperate info tab for threads - ruining my colour scheme >:(
-- Neofetch is now a dependency of CoreBench. The reason why is... dumb
-- Results stored in ```corebenchinfo.txt``` are stored alongside the date and time they were performed
+- Neofetch is now a dependency of CoreBench. It is utilised to get the colour of your distro.
+
+#### Version 1.0.5
+- Added support for the Windows-coloured name in the "OS Name" tab (despite there being no Windows support)
+- Added more loading messages.
+- Added an activation screen when grabbing "essential" variable data.
+- The multithread test now utilises up to 12 threads.
+- The multicore test now utilises up to 6 cores.
+#### Major Feature!
+- Dynamic mode - adjusts the performance tests based on your hardware. Multicore and multithread tests will match the number of cores and threads your CPU has. It's a test aimed at CPU efficiency (not power efficiency, core and thread utilisation efficiency), so comparing dynamic mode scores between 2 CPUs with different core/thread counts is not advised. (The default test runs on 6 cores and 12 threads.) **Your scores will not be submitted when recorded in dynamic mode**. Press [CTRL] + [C] when CoreBench is starting up (before it shows ```Activating...```) to enter dynamic mode.
+
+- CoreBench *104* and *105 beta* only ran on 4 cores and 4 threads. This has been adjusted for realistic performance monitoring, now running on 6 cores and 12 threads.
+- Various stability fixes.
+- Various score re-balancing (comparing scores between *104* and *105* is no longer valid, and these changes explain why I haven't made the database yet)
+- Scores in dynamic mode are based on the ratio of cores/threads to 6 and 12.
+- Dynamic mode was finished on 05/02/2025.
