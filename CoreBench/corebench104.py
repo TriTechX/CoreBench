@@ -1,6 +1,7 @@
 #Built-in packages
 import time
 import os
+import pwd
 import socket
 import multiprocessing
 import threading
@@ -20,16 +21,64 @@ import distro
 #Custom packages
 import colours
 
-osName = platform.system()
-memRaw = round(((psutil.virtual_memory().total)/(1e+6)))
-brandName = cpuinfo.get_cpu_info()["brand_raw"]
-hostname = socket.gethostname()
-localIp = socket.gethostbyname(socket.gethostname())
+def clear():
+
+    name = str(os.name)
+    if name in ["nt","dos"]:
+        os.system("cls")
+    else:
+        os.system("clear")
+    
+def prefetch():
+    global osName, memRaw, brandName, hostname, localIp, done
+    osName = platform.system()
+    memRaw = round(((psutil.virtual_memory().total)/(1e+6)))
+    brandName = cpuinfo.get_cpu_info()["brand_raw"]
+    hostname = socket.gethostname()
+    localIp = socket.gethostbyname(socket.gethostname())
+    done = True
+
+def preload():
+    global done
+    print(colours.grey() + "Activating..." + colours.reset())
+    while done == False:
+        time.sleep(0.01)
+
+try:
+    print(colours.grey()+"Press [CTRL] + [C] to enter dynamic mode."+colours.reset())
+    time.sleep(3)
+    dynamicMode = False
+except KeyboardInterrupt:
+    clear()
+    print(colours.grey()+"DYNAMIC MODE ACTIVATED, SCORES WILL NOT BE SUBMITTED."+colours.reset())
+    dynamicMode = True
+    time.sleep(1)
+    clear()
+
+if __name__ == "__main__":
+    try:
+        grep = threading.Thread(target=prefetch)
+        load = threading.Thread(target=preload)
+
+        done = False
+
+        grep.start()
+        load.start()
+
+        grep.join()
+        load.join()
+    except exception as e:
+        f = open("log.txt", "a")
+        f.write(e)
+        f.close()
 
 ### ZONE OF EXPERIMENTATION ###
 ### END OF ZONE ###
 
-if str(os.name) in ["nt", "dos"]:
+def get_user():
+    return pwd.getpwuid(os.getuid())[0]
+
+if str(os.name).lower() in ["nt", "dos", "windows"]:
     def checkRoot():
         try:
             return ctypes.windll.shell32.IsUserAnAdmin() != 0
@@ -50,7 +99,7 @@ else:
 def getData():
     try:
     
-        global hostname, GPUs, osName, architecture, brandName, clockSpeed, CPUs, memRaw, memory, endLoad, distroName, localIp, Threads, threadsPerCore, osNamePretty
+        global hostname, GPUs, osName, architecture, brandName, clockSpeed, CPUs, memRaw, memory, endLoad, distroName, localIp, Threads, threadsPerCore, osNamePretty, user
         
         hostname = socket.gethostname()
         localIp = socket.gethostbyname(socket.gethostname())
@@ -68,6 +117,7 @@ def getData():
         threadsPerCore= int(os.cpu_count())/int(CPUs)
         memRaw = round(((psutil.virtual_memory().total)/(1e+6)))
         memory = round(((psutil.virtual_memory().total)/(1e+9)),2)
+        user = get_user()
         if osName in ["Linux"]:
             time.sleep(1)
             distroName = str(distro.name(pretty=True))
@@ -96,8 +146,12 @@ def getData():
                 distroColourCode = f"\033[{match[0]}m"
                 return distroColourCode
             osNamePretty=f"{distroColour()}{distroName}"
+            os.remove("NeofetchOut.txt")
         else:
-            osNamePretty=osName
+            if osName.lower() in ["nt", "dos", "windows"]:
+                osNamePretty=colours.blue() + osName
+            else:
+                osNamePretty=colours.grey() + osName
             
     except Exception as e:
         f=open("log.txt","w")
@@ -106,7 +160,7 @@ def getData():
 
     endLoad = True
 
-messages = ["So, you're back...", "Hello there!", "It's hot in here...", "400FPS", "Disabling frame generation...", "RTX ON", "Removing nanites...", "Stealing your personal information...", "Pro tip: bench", "Sussy Bucket", "No standard users allowed!", "Connecting to the (totally functional) CoreBench database...", "Getting more ping...", "Optimizing...", "Initiating...", "WELCOME.", f"Here with your {brandName} I see...", f"{osName}? A fellow man of culture...", f"Eating all {memRaw}MB of RAM...", "Overclocking...", "Deleting main.py...", "Always remember to remove the French language pack!", f"Not much of a {osName} fan myself, but you do you...", f"Welcome back {hostname}.", f"Haha! Got your IP! Seriously! {localIp}", "I use Arch btw", "I use Core btw"]
+messages = ["So, you're back...", "Hello there!", "It's hot in here...", "400FPS", "Disabling frame generation...", "RTX ON", "Removing nanites...", "Stealing your personal information...", "Pro tip: bench", "Sussy Bucket", "No standard users allowed!", "Connecting to the (totally functional) CoreBench database...", "Getting more ping...", "Optimizing...", "Initiating...", "WELCOME.", f"Here with your {brandName} I see...", f"{osName}? A fellow man of culture...", f"Eating all {memRaw}MB of RAM...", "Overclocking...", "Deleting main.py...", "Always remember to remove the French language pack!", f"Not much of a {osName} fan myself, but you do you...", f"Welcome back {hostname}.", f"Haha! Got your IP! Seriously! {localIp}", "I use Arch btw", "I use Core btw", "Over 6GHz!", "Bringing out the Intel Pentium...", "Gathering texel fillrate...", "Collecting frames...", "No fake frames here!", "Changing boot order...", "Imagine if you were using this on Windows lol", "Still held prisoner by Replit.", "It's dangerous to go alone.", "All your bench are belong to us.", "GPU bench coming soon. Maybe.", "Unused RAM is useless RAM. Give some to me."]
 
 message = messages[random.randint(0,len(messages)-1)]
 
@@ -197,7 +251,6 @@ if __name__ == "__main__":
         grep.join()
         load.join()
     
-        print("Load done!")
     except Exception as e:
         f = open("log.txt","a")
         f.write(e)
@@ -211,14 +264,10 @@ def prettyPrintData():
     else:
         cpuColour = colours.magenta()
 
-    
-        
     print("------")
 
-    if osName in ["Linux"]:
-        print(f"{colours.magenta()}OS Name{colours.reset()}: {osNamePretty}")
-    else:
-        print(f"{colours.magenta()}OS Name{colours.reset()}: {osNamePretty}")
+    print(f"{colours.magenta()}OS Name{colours.reset()}: {osNamePretty}")
+        
     
     print(f"{colours.cyan()}Architecture{colours.reset()}: {architecture}")
     
@@ -233,7 +282,7 @@ def prettyPrintData():
     
     
     print(f"{colours.green()}CPUs{colours.reset()}: {CPUs} Cores")
-    print(f"{colours.green()}Threads{colours.reset()}: {Threads} Threads")
+    print(f"{colours.cyan()}Threads{colours.reset()}: {Threads} Threads")
     
     print("------")
     
@@ -245,6 +294,12 @@ def prettyPrintData():
     for gpu in GPUs:
         print(f"{colours.cyan()}GPU Name{colours.reset()}: {gpu.name}")
         print(f"{colours.magenta()}VRAM{colours.reset()}: {gpu.memoryTotal} MB")
+
+
+if len(GPUs)>0:
+    gpuPresent = True
+else:
+    gpuPresent = False
 
 
 #set clear() to clear the screen
@@ -387,7 +442,9 @@ def singleCore(showResults):
     clear()
 
     if showResults == True:
-        
+        if dynamicMode == True:
+            print(f"{colours.grey()}DYNAMIC MODE IS ON{colours.reset()}")
+            print("------")
         print(f"{colours.green()}Single Core Benchmark Complete!{colours.reset()}")
         print(f"{colours.magenta()}Total time{colours.reset()}: {totalTime} seconds")
         print(f"{colours.cyan()}Single core score{colours.reset()}: {score}")
@@ -421,11 +478,8 @@ def multiCore(showResults):
 
     #sqrts every number in the created list
     def intense1(threadNo):
-
         global N
-    
         list = createList(threadNo)
-    
         print("[{}{}-rC{}] Crunching numbers...".format(colours.cyan(), threadNo, colours.reset()))
     
         for x in range(0,5):
@@ -433,12 +487,10 @@ def multiCore(showResults):
     
                 result = math.sqrt(item)
 
+    #uses division
     def intense2(threadNo):
-    
-        global N
-    
+        global N, CPUs
         list = createList(threadNo)
-    
         print("[{}{}-rC{}] Crunching numbers...".format(colours.cyan(), threadNo, colours.reset()))
     
         for x in range(0,5):
@@ -446,51 +498,75 @@ def multiCore(showResults):
     
                 result = item/(item+1/(item+1/2))
 
-    if __name__ == "__main__": 
-        def run_processes():
-            core1 = multiprocessing.Process(target=intense1, args=(1,))
-            core2 = multiprocessing.Process(target=intense2, args=(2,))
-            core3 = multiprocessing.Process(target=intense1, args=(3,))
-            core4 = multiprocessing.Process(target=intense2, args=(4,))
+    #checks for dynamic mode
+    if dynamicMode == True:
+        coreCount = int(CPUs)
+    else:
+        coreCount = 6
 
-            core1.start()
-            core2.start()
-            core3.start()
-            core4.start()
+    #running process function (creates variable numbers of functions in dynamic mode)
+    def run_processes():
+        global coreCount, CPUs
+        
+        if dynamicMode == True:
+            coreCount = int(CPUs)
+        else:
+            coreCount = 6
+            
+        processes = []
+        ticker = 0
+        
+        for i in range(coreCount):
+            if ticker == 0:
+                p = multiprocessing.Process(target=intense1, args=(i+1,))
+                tecker = 1
+            elif ticker == 1:
+                p = multiprocessing.Process(target=intense2, args=(i+1,))
+                ticker = 0
+            if tecker == 1:
+                ticker = 1
+                
+            processes.append(p)
+            p.start()
 
-            core1.join()
-            core2.join()
-            core3.join()
-            core4.join()
+        for p in processes:
+            p.join()
 
-        timeList = []
+    
+    timeList = []
 
-        print(f"This one {colours.cyan()}generally{colours.reset()} doesn't take too long.")
-        print("------")
-        for x in range(0,3):
-            start=time.perf_counter()
+    print(f"This one {colours.cyan()}generally{colours.reset()} doesn't take too long.")
+    print("------")
 
+    #run the test 3 times
+    for x in range(0,3):
+        start=time.perf_counter()
+        #run tests
+        if __name__ == "__main__":
             run_processes()
 
-            end=time.perf_counter()
-            Time = end-start
-            timeList.append(Time)
+        end=time.perf_counter()
+        Time = end-start
+        timeList.append(Time)
 
-        totalTime = 0
-        for item in timeList:
-            totalTime+=item
+    totalTime = 0
+    for item in timeList:
+        totalTime+=item
 
-        avgTime = totalTime/3
-        score = round((1/avgTime)*(math.e)*1000)
-        clear()
+    avgTime = totalTime/3
+    score = round((1/avgTime)*(math.e)*(1000*(1/math.log(coreCount+4,10))))
+    clear()
 
-        if showResults == True:
-            print(f"{colours.green()}Multi Core Test Complete!{colours.reset()}")
+    if showResults == True:
+        if dynamicMode == True:
+            print(f"{colours.grey()}DYNAMIC MODE IS ON{colours.reset()}")
             print("------")
-            print(f"{colours.magenta()}Total time{colours.reset()}: {totalTime} seconds")
-            print(f"{colours.cyan()}Multi core score{colours.reset()}: {score} points")
+        print(f"{colours.green()}Multi Core Test Complete!{colours.reset()}")
+        print("------")
+        print(f"{colours.magenta()}Total time{colours.reset()}: {totalTime} seconds")
+        print(f"{colours.cyan()}Multi core score{colours.reset()}: {score} points")
 
-        return score
+    return score
 
 
 #multithreading test, with the same basic algorithms as the multicore test
@@ -543,31 +619,47 @@ def multiThread(showResults):
                 result = item/(item+1/(item+1/2))
 
     if __name__ == "__main__": 
-
+        if dynamicMode == True:
+            threadCount = Threads
+            
+        else:
+            threadCount = 12
+            
         def run_threads():
-            thread1 = threading.Thread(target=intense1, args=(1,))
-            thread2 = threading.Thread(target=intense2, args=(2,))
-            thread3 = threading.Thread(target=intense1, args=(3,))
-            thread4 = threading.Thread(target=intense2, args=(4,))
+            global threadCount, Threads
 
-            thread1.start()
-            thread2.start()
-            thread3.start()
-            thread4.start()
+            if dynamicMode == True:
+                threadCount = int(Threads)
+            else:
+                threadCount = 12
 
-            thread1.join()
-            thread2.join()
-            thread3.join()
-            thread4.join()
+            threads = []
+            ticker = 0
 
+            for i in range(threadCount):
+                if ticker == 0:
+                    t = threading.Thread(target=intense1, args=(i+1,))
+                    tecker = 1
+                elif ticker == 1:
+                    t = threading.Thread(target=intense2, args=(i+1,))
+                    ticker = 0
+                if tecker == 1:
+                    ticker = 1
+
+                threads.append(t)
+                t.start()
+
+            for t in threads:
+                t.join()
+                
         timeList = []
         print(f"The {colours.red()}pain{colours.reset()} should be {colours.magenta()}over quickly{colours.reset()}...")
         print("------")
         for x in range(0,3):
 
             start=time.perf_counter()
-
-            run_threads()
+            if __name__ == "__main__":
+                run_threads()
 
             end=time.perf_counter()
 
@@ -583,10 +675,13 @@ def multiThread(showResults):
 
         avgTime = totalTime/3
 
-        score = round((1/avgTime)*(math.e)*1000)
+        score = round((1/avgTime)*(math.e)*(2000*(1/math.log(threadCount+8,10))))
         clear()
 
         if showResults == True:
+            if dynamicMode == True:
+                print(f"{colours.grey()}DYNAMIC MODE IS ON{colours.reset()}")
+                print("------")
             print(f"{colours.green()}Multi Thread Test Complete!{colours.reset()}")
             print("------")
             print(f"{colours.magenta()}Total time{colours.reset()}: {totalTime} seconds")
@@ -630,7 +725,9 @@ def fullCPUTest():
     
     now = datetime.now()
     prettyDate = now.strftime("%d-%m-%y %H:%M")
-    
+    if dynamicMode == True:
+        print(f"{colours.grey()}DYNAMIC MODE IS ON{colours.reset()}")
+        print("------")
     print(f"{colours.green()}Overall CPU Performance Test Complete!{colours.reset()}")
     print("------")
     print(f"{colours.magenta()}Total points scored{colours.reset()}: {totalScore} || (S:{singleCoreScore}, M:{multiCoreScore}, MT:{multiThreadScore})")
@@ -640,7 +737,10 @@ def fullCPUTest():
     f.write(f"\n\n{prettyDate} Results:\n------\nSingle Core: {singleCoreScore}\nMulti Core: {multiCoreScore}\nMulti Thread: {multiThreadScore}\nAverage Score: {finalScore}")
     f.close()
 
-
+if dynamicMode == True:
+    print(f"{colours.grey()}DYNAMIC MODE IS ON{colours.reset()}")
+    print("------")
+print(f"Welcome back, {colours.green()}{user}{colours.reset()}!")
 prettyPrintData()
 
 while True:
@@ -653,7 +753,10 @@ while True:
     #Main program
     
     question = "Please select the test you wish to perform"
-    choices = ["CPU: Single core & thread test", "CPU: Multi core test", "CPU: Multi thread test", "CPU: Full test"]
+    if gpuPresent == False:
+        choices = ["CPU: Single core & thread test", "CPU: Multi core test", "CPU: Multi thread test", "CPU: Full test"]
+    else:
+        choices = ["CPU: Single core & thread test", "CPU: Multi core test", "CPU: Multi thread test", "CPU: Full test", "GPU: Matrix performance test"]
     
     option, index = pick(choices, question, indicator='=>', default_index=0)
         
@@ -669,3 +772,6 @@ while True:
     elif index == 3:
         fullCPUTest()
         prettyPrintData()
+    elif index == 4:
+        #runGPU
+        pass
