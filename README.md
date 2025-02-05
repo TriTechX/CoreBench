@@ -112,7 +112,7 @@ Users running on Windows through Python interpreters may run into issues such as
 ### Version 1.0.6
 - Changed method of grabbing name to getpass.getuser() instead of pwd.
 - Single core test was not guaranteed to be isolated to a single core. The single core test ignores hyperthreading, and runs on one core on one thread. This was hastily added after its discovery just after 105.
-### CPU Utilisation Before 1.0.6 ![Before](https://i.ibb.co/snNxwvy/before.jpg "Before")<br>
+### CPU Utilisation Before 1.0.6<br> ![Before](https://i.ibb.co/snNxwvy/before.jpg "Before")<br>
 - As you can see, all the CPU cores activate at the same time, indicating that Python is using more than 1 core, as this is a 1 core per thread processor.
-### CPU Utilisation After 1.0.6 ![Afterwards](https://i.ibb.co/prfMzQJF/afterwards.jpg "Afterwards")<br>
+### CPU Utilisation After 1.0.6<br> ![Afterwards](https://i.ibb.co/prfMzQJF/afterwards.jpg "Afterwards")<br>
 - In the new 1.0.6 patch, only CPU 0 is fully utilised. The rest are supposed to be idling, but this is a Chromebook processor. (Thank you to psutil's cpu_affinity!!!)<br>Yes, this example is running on Windows. This does not mean Windows support is coming.
