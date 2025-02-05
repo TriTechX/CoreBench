@@ -1,4 +1,4 @@
-# CoreBench - Benchmark for CoreOS
+# CoreBench - Benchmark for Linux Systems
 ## This program aims to perform the following functions:
 
 - Single core and thread performance
