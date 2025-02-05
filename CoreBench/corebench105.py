@@ -1,7 +1,6 @@
 #Built-in packages
 import time
 import os
-import pwd
 import socket
 import multiprocessing
 import threading
@@ -12,6 +11,7 @@ import random
 from datetime import datetime
 import subprocess
 import re
+import getpass
 #Third-party packages
 import cpuinfo
 import psutil
@@ -28,7 +28,7 @@ def clear():
         os.system("cls")
     else:
         os.system("clear")
-    
+clear()
 def prefetch():
     global osName, memRaw, brandName, hostname, localIp, done
     osName = platform.system()
@@ -54,7 +54,7 @@ except KeyboardInterrupt:
     dynamicMode = True
     time.sleep(1)
     clear()
-
+clear()
 if __name__ == "__main__":
     try:
         grep = threading.Thread(target=prefetch)
@@ -76,7 +76,7 @@ if __name__ == "__main__":
 ### END OF ZONE ###
 
 def get_user():
-    return pwd.getpwuid(os.getuid())[0]
+    return getpass.getuser()
 
 if str(os.name).lower() in ["nt", "dos", "windows"]:
     def checkRoot():
@@ -336,6 +336,13 @@ if not os.path.exists(filename):
 #write specifications to a file
 #single core CPU test
 def singleCore(showResults):
+    p = psutil.Process(os.getpid())
+    for item in p.cpu_affinity():
+        try:
+            p.cpu_affinity([0])
+        except:
+            p.cpu_affinity(list(range(os.cpu_count()))) #reset
+    
     global N
     numList = []
 
@@ -744,6 +751,10 @@ print(f"Welcome back, {colours.green()}{user}{colours.reset()}!")
 prettyPrintData()
 
 while True:
+    p = psutil.Process(os.getpid())
+    
+    p.cpu_affinity(list(range(os.cpu_count())))
+    
     temp = input(colours.grey()+"Press [ENTER] to continue..."+colours.reset())
     
     clear()
