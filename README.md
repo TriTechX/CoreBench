@@ -99,8 +99,8 @@ Users running on Windows through Python interpreters may run into issues such as
 - Added support for the Windows-coloured name in the "OS Name" tab (despite there being no Windows support)
 - Added more loading messages.
 - Added an activation screen when grabbing "essential" variable data.
-- The multithread test now utilises up to 12 threads.
-- The multicore test now utilises up to 6 cores.
+- The multithread test now utilises 12 threads.
+- The multicore test now utilises 6 cores.
 #### Major Feature!
 - Dynamic mode - adjusts the performance tests based on your hardware. Multicore and multithread tests will match the number of cores and threads your CPU has. It's a test aimed at CPU efficiency (not power efficiency, core and thread utilisation efficiency), so comparing dynamic mode scores between 2 CPUs with different core/thread counts is not advised. (The default test runs on 6 cores and 12 threads.) **Your scores will not be submitted when recorded in dynamic mode**. Press [CTRL] + [C] when CoreBench is starting up (before it shows ```Activating...```) to enter dynamic mode.
 
