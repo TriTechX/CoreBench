@@ -109,3 +109,10 @@ Users running on Windows through Python interpreters may run into issues such as
 - Various score re-balancing (comparing scores between *104* and *105* is no longer valid, and these changes explain why I haven't made the database yet)
 - Scores in dynamic mode are based on the ratio of cores/threads to 6 and 12.
 - Dynamic mode was finished on 05/02/2025.
+### Version 1.0.6
+- Changed method of grabbing name to getpass.getuser() instead of pwd.
+- Single core test was not guaranteed to be isolated to a single core. The single core test ignores hyperthreading, and runs on one core on one thread. This was hastily added after its discovery just after 105.
+### CPU Utilisation Before 1.0.6 ![Before](https://i.ibb.co/snNxwvy/before.jpg "Before")
+- As you can see, all the CPU cores activate at the same time, indicating that Python is using more than 1 core, as this is a 1 core per thread processor.
+### CPU Utilisation After 1.0.6 ![Afterwards](https://i.ibb.co/prfMzQJF/afterwards.jpg "Afterwards")
+- In the new 1.0.6 patch, only CPU 0 is fully utilised. The rest are supposed to be idling, but this is a Chromebook processor. (Thank you to psutil's cpu_affinity!!!)<br>Yes, this example is running on Windows. This does not mean Windows support is coming.
