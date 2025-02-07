@@ -109,10 +109,36 @@ Users running on Windows through Python interpreters may run into issues such as
 - Various score re-balancing (comparing scores between *104* and *105* is no longer valid, and these changes explain why I haven't made the database yet)
 - Scores in dynamic mode are based on the ratio of cores/threads to 6 and 12.
 - Dynamic mode was finished on 05/02/2025.
+
 ### Version 1.0.6
 - Changed method of grabbing name to getpass.getuser() instead of pwd.
 - Single core test was not guaranteed to be isolated to a single core. The single core test ignores hyperthreading, and runs on one core on one thread. This was hastily added after its discovery just after 105.
 ### CPU Utilisation Before 1.0.6<br> ![Before](https://i.ibb.co/snNxwvy/before.jpg "Before")<br>
 - As you can see, all the CPU cores activate at the same time, indicating that Python is using more than 1 core, as this is a 1 core per thread processor.
 ### CPU Utilisation After 1.0.6<br> ![Afterwards](https://i.ibb.co/prfMzQJF/afterwards.jpg "Afterwards")<br>
-- In the new 1.0.6 patch, only CPU 0 is fully utilised. The rest are supposed to be idling, but this is a Chromebook processor. (Thank you to psutil's cpu_affinity!!!)<br>Yes, this example is running on Windows. This does not mean Windows support is coming.
+- In the new 1.0.6 patch, only CPU 0 is fully utilised. The rest are supposed to be idling, but this is a Chromebook processor. (Thank you to psutil's cpu_affinity!!!)<br>Yes, this example is running on Windows. This does not mean Windows support is coming. I think. Maybe I should add a multiplier for Windows machines, or make a seperate database for Windows machines or... no.
+
+### Version 1.1.0
+- Single core test doesn't take as long anymore.
+- The percentage shows to one significant figure rather than the nearest integer to prevent I/O bottleneck.
+- Moved the benchmark process code for multicore test into a main check.
+- The reason why it isn't compatible with Windows is now known. Windows cannot "pickle" (initiate for use in multicore) local functions (functions defined inside of functions). I don't want to change this especially since I am so far into development, and it will mess up the few consistencies that exist in my spaghetti code. Once again, my totally nonexistent dreams for CoreBench on Windows are destroyed. Maybe I'll make one *for* Windows. I hate Windows so much man. Why can't it just *work*?
+- Added one additional point to all test scores. Or did I?
+- Another reason that CoreBench runs badly on Windows has been discovered (other than overhead). Due to Windows' Multilevel Feedback Queue process scheduling method, CoreBench is treated like a background process, and punished for being demanding. Linux uses the Completely Fair scheduling method, which is why scores are so much higher and more definitive.<br>
+
+### Before High Priority
+![Before](https://i.ibb.co/6cbj4Wwr/beforee.jpg "Before")
+
+
+### After High Priority
+![Afterwards](https://i.ibb.co/BHgZF1rf/after.jpg "Afterwards")<br>
+
+It takes an extra 8 seconds without high priority. This was WITH background processes running in both tests. (Brave browser idling)<br>
+Despite the tab saying "CoreBench105.py", it is actually CoreBench 1.0.7.
+
+- Just realised it still says (c) TriTech 2024, meaning the copyright is outdated. That ain't good. Updated to (c) TriTech 2025 as of **7th February 2025**.
+- Added version no. and dynamic mode info to the corebenchinfo.txt file. A new set of results will be written to corebench.txt when you run a full CPU test.
+
+### Major Feature!
+- Added a set of data in .csv format called "corebenchdata.csv", created when not present and written to with each non-dynamic mode test result.
+- Full CPU test now produces a visual bar chart showing performance vs your system's overall average, called "corebenchdata.png"
