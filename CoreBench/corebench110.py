@@ -12,14 +12,22 @@ from datetime import datetime
 import subprocess
 import re
 import getpass
+import csv
 #Third-party packages
 import cpuinfo
 import psutil
 import GPUtil
 from pick import pick
 import distro
+import speedtest
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
 #Custom packages
 import colours
+#package functions
+mpl.use("Agg")
+
 
 def clear():
 
@@ -28,7 +36,9 @@ def clear():
         os.system("cls")
     else:
         os.system("clear")
+
 clear()
+
 def prefetch():
     global osName, memRaw, brandName, hostname, localIp, done
     osName = platform.system()
@@ -67,7 +77,7 @@ if __name__ == "__main__":
 
         grep.join()
         load.join()
-    except exception as e:
+    except Exception as e:
         f = open("log.txt", "a")
         f.write(e)
         f.close()
@@ -99,7 +109,7 @@ else:
 def getData():
     try:
     
-        global hostname, GPUs, osName, architecture, brandName, clockSpeed, CPUs, memRaw, memory, endLoad, distroName, localIp, Threads, threadsPerCore, osNamePretty, user
+        global hostname, GPUs, osName, architecture, brandName, clockSpeed, CPUs, memRaw, memory, endLoad, distroName, localIp, Threads, threadsPerCore, osNamePretty, user, version
         
         hostname = socket.gethostname()
         localIp = socket.gethostbyname(socket.gethostname())
@@ -147,6 +157,7 @@ def getData():
                 return distroColourCode
             osNamePretty=f"{distroColour()}{distroName}"
             os.remove("NeofetchOut.txt")
+        
         else:
             if osName.lower() in ["nt", "dos", "windows"]:
                 osNamePretty=colours.blue() + osName
@@ -157,7 +168,11 @@ def getData():
         f=open("log.txt","w")
         f.write(e)
         f.close()
-
+        
+    #UPDATE THIS WITH EVERY VERSION
+    version = "1.1.0"
+    #UPDATE THIS WITH EVERY VERSION
+    
     endLoad = True
 
 messages = ["So, you're back...", "Hello there!", "It's hot in here...", "400FPS", "Disabling frame generation...", "RTX ON", "Removing nanites...", "Stealing your personal information...", "Pro tip: bench", "Sussy Bucket", "No standard users allowed!", "Connecting to the (totally functional) CoreBench database...", "Getting more ping...", "Optimizing...", "Initiating...", "WELCOME.", f"Here with your {brandName} I see...", f"{osName}? A fellow man of culture...", f"Eating all {memRaw}MB of RAM...", "Overclocking...", "Deleting main.py...", "Always remember to remove the French language pack!", f"Not much of a {osName} fan myself, but you do you...", f"Welcome back {hostname}.", f"Haha! Got your IP! Seriously! {localIp}", "I use Arch btw", "I use Core btw", "Over 6GHz!", "Bringing out the Intel Pentium...", "Gathering texel fillrate...", "Collecting frames...", "No fake frames here!", "Changing boot order...", "Imagine if you were using this on Windows lol", "Still held prisoner by Replit.", "It's dangerous to go alone.", "All your bench are belong to us.", "GPU bench coming soon. Maybe.", "Unused RAM is useless RAM. Give some to me."]
@@ -193,7 +208,7 @@ def loadingScreen():
             print("""██████╦╝███████╗██║░╚███║╚█████╔╝██║░░██║""")
             print("""╚═════╝░╚══════╝╚═╝░░╚══╝░╚════╝░╚═╝░░╚═╝""")
             print(colours.reset())
-            print(colours.grey() + "© TriTech 2024 - If you paid for this software, get a refund.\n" + colours.reset())
+            print(colours.grey() + "© TriTech 2025 - If you paid for this software, get a refund.\n" + colours.reset())
             print(message)
             time.sleep(0.3)
             clear()
@@ -211,7 +226,7 @@ def loadingScreen():
             print("""██████╦╝███████╗██║░╚███║╚█████╔╝██║░░██║""")
             print("""╚═════╝░╚══════╝╚═╝░░╚══╝░╚════╝░╚═╝░░╚═╝""")
             print(colours.reset())
-            print(colours.grey() + "© TriTech 2024 - If you paid for this software, get a refund.\n" + colours.reset())
+            print(colours.grey() + "© TriTech 2025 - If you paid for this software, get a refund.\n" + colours.reset())
             print(message)
             time.sleep(0.3)
             clear()
@@ -229,7 +244,7 @@ def loadingScreen():
             print("""██████╦╝███████╗██║░╚███║╚█████╔╝██║░░██║""")
             print("""╚═════╝░╚══════╝╚═╝░░╚══╝░╚════╝░╚═╝░░╚═╝""")
             print(colours.reset())
-            print(colours.grey() + "© TriTech 2024 - If you paid for this software, get a refund.\n" + colours.reset())
+            print(colours.grey() + "© TriTech 2025 - If you paid for this software, get a refund.\n" + colours.reset())
             print(message)
             time.sleep(0.3)
             clear()
@@ -315,7 +330,7 @@ N = 1000000
 #intensity of the test, point system will not scale with intensity
 filename = "corebenchinfo.txt"
 
-if not os.path.exists(filename):
+if not os.path.exists(filename) or os.path.getsize(filename) == 0:
     f=open("corebenchinfo.txt", "w")
     f.close()
     os.remove("corebenchinfo.txt")
@@ -333,9 +348,25 @@ if not os.path.exists(filename):
         f.write("GPU Name: " + str(gpu.name) + "\n")
         f.write("GPU Name: " + str(gpu.memoryTotal) + " MB\n")
     f.close()
+
+filename="DATA/corebenchdata.csv"
+if not os.path.exists(filename) or os.path.getsize(filename) == 0:
+    f=open(filename, "w")
+    headers=[["single", "mcore", "mthread", "full"]]
+
+    with open("DATA/corebenchdata.csv", "a", newline="", encoding="utf-8") as file:
+        writer = csv.writer(file)
+        writer.writerows(headers)
+        
+    f.close()
 #write specifications to a file
 #single core CPU test
 def singleCore(showResults):
+
+    def oneSigFig(num):
+        output = int(round(num, 1-len(str(int(abs(num))))))
+        return output
+    
     p = psutil.Process(os.getpid())
     for item in p.cpu_affinity():
         try:
@@ -343,9 +374,10 @@ def singleCore(showResults):
         except:
             p.cpu_affinity(list(range(os.cpu_count()))) #reset
     
-    global N
+    global SINGLENO, N
     numList = []
 
+    SINGLENO = int(N/2)
     #Stage 1, adds all the numbers to a list
 
     percent = 0
@@ -356,9 +388,9 @@ def singleCore(showResults):
 
     start = time.perf_counter()
 
-    for x in range(0,N):
+    for x in range(0,SINGLENO):
 
-        percent = int(round((x/1000000)*100,0))
+        percent = int(oneSigFig((x/SINGLENO)*100))
 
         if oldPercent != percent:
             clear()
@@ -391,7 +423,7 @@ def singleCore(showResults):
 
         i+=1
 
-        percent = round(i/1000000*100)
+        percent = oneSigFig((i/SINGLENO)*100)
 
         if oldPercent != percent:
             clear()
@@ -425,7 +457,7 @@ def singleCore(showResults):
 
         i+=1
 
-        percent = round(i/500000*100)
+        percent = oneSigFig((i/(SINGLENO/2))*100)
 
         if oldPercent != percent:
             clear()
@@ -444,15 +476,22 @@ def singleCore(showResults):
     #Calculates the total time and score.
 
     totalTime = stageOne + stageTwo + stageThree
-    averageTime = totalTime/3
-    score = round(((1/averageTime)*10000)*3)
+    avgTime = totalTime/3
+    score = round((1/avgTime)*(math.e)*(1000*3))
     clear()
 
+    if not dynamicMode and not fullTest:
+        data = [[score, "", "", ""]]
+        filename = "DATA/corebenchdata.csv"
+        with open("DATA/corebenchdata.csv", "a", newline="", encoding="utf-8") as file:
+            writer = csv.writer(file)
+            writer.writerows(data)
+    
     if showResults == True:
         if dynamicMode == True:
             print(f"{colours.grey()}DYNAMIC MODE IS ON{colours.reset()}")
             print("------")
-        print(f"{colours.green()}Single Core Benchmark Complete!{colours.reset()}")
+        print(f"{colours.green()}Single Core Benchmark Complete!{colours.reset()} ({colours.grey()}{version}{colours.reset()})")
         print(f"{colours.magenta()}Total time{colours.reset()}: {totalTime} seconds")
         print(f"{colours.cyan()}Single core score{colours.reset()}: {score}")
     
@@ -462,7 +501,8 @@ def singleCore(showResults):
 
 #Multicore test
 def multiCore(showResults): 
-
+    p = psutil.Process(os.getpid())
+    p.cpu_affinity(list(range(os.cpu_count())))
     #function to create the list
     def createList(threadNo):
         global N
@@ -493,7 +533,7 @@ def multiCore(showResults):
             for item in list:
     
                 result = math.sqrt(item)
-
+        print("[{}{}-cC{}] Instance complete!".format(colours.green(), threadNo, colours.reset()))
     #uses division
     def intense2(threadNo):
         global N, CPUs
@@ -504,7 +544,7 @@ def multiCore(showResults):
             for item in list:
     
                 result = item/(item+1/(item+1/2))
-
+        print("[{}{}-cC{}] Instance complete!".format(colours.green(), threadNo, colours.reset()))
     #checks for dynamic mode
     if dynamicMode == True:
         coreCount = int(CPUs)
@@ -512,44 +552,46 @@ def multiCore(showResults):
         coreCount = 6
 
     #running process function (creates variable numbers of functions in dynamic mode)
-    def run_processes():
-        global coreCount, CPUs
-        
-        if dynamicMode == True:
-            coreCount = int(CPUs)
-        else:
-            coreCount = 6
-            
-        processes = []
-        ticker = 0
-        
-        for i in range(coreCount):
-            if ticker == 0:
-                p = multiprocessing.Process(target=intense1, args=(i+1,))
-                tecker = 1
-            elif ticker == 1:
-                p = multiprocessing.Process(target=intense2, args=(i+1,))
-                ticker = 0
-            if tecker == 1:
-                ticker = 1
-                
-            processes.append(p)
-            p.start()
-
-        for p in processes:
-            p.join()
-
     
     timeList = []
 
     print(f"This one {colours.cyan()}generally{colours.reset()} doesn't take too long.")
     print("------")
 
+    if __name__ == "__main__":
+        def run_processes():
+            if __name__ == "__main__":
+                global coreCount, CPUs, coreContext
+    
+                if dynamicMode == True:
+                    coreCount = int(CPUs)
+                else:
+                    coreCount = 6
+    
+                processes = []
+                ticker = 0
+    
+                for i in range(coreCount):
+                    if ticker == 0:
+                        p = coreContext.Process(target=intense1, args=(i+1,))
+                        tecker = 1
+                    elif ticker == 1:
+                        p = coreContext.Process(target=intense2, args=(i+1,))
+                        ticker = 0
+                    if tecker == 1:
+                        ticker = 1
+    
+                    processes.append(p)
+                    p.start()
+    
+                for p in processes:
+                    p.join()
+                    
     #run the test 3 times
     for x in range(0,3):
         start=time.perf_counter()
         #run tests
-        if __name__ == "__main__":
+        if __name__ == "__main__":     
             run_processes()
 
         end=time.perf_counter()
@@ -564,11 +606,18 @@ def multiCore(showResults):
     score = round((1/avgTime)*(math.e)*(1000*(1/math.log(coreCount+4,10))))
     clear()
 
+    if not dynamicMode and not fullTest:
+        data = [["", score, "", ""]]
+        filename = "DATA/corebenchdata.csv"
+        with open("DATA/corebenchdata.csv", "a", newline="", encoding="utf-8") as file:
+            writer = csv.writer(file)
+            writer.writerows(data)
+        
     if showResults == True:
         if dynamicMode == True:
             print(f"{colours.grey()}DYNAMIC MODE IS ON{colours.reset()}")
             print("------")
-        print(f"{colours.green()}Multi Core Test Complete!{colours.reset()}")
+        print(f"{colours.green()}Multi Core Test Complete!{colours.reset()} ({colours.grey()}{version}{colours.reset()})")
         print("------")
         print(f"{colours.magenta()}Total time{colours.reset()}: {totalTime} seconds")
         print(f"{colours.cyan()}Multi core score{colours.reset()}: {score} points")
@@ -578,7 +627,9 @@ def multiCore(showResults):
 
 #multithreading test, with the same basic algorithms as the multicore test
 def multiThread(showResults):
-
+    p = psutil.Process(os.getpid())
+    p.cpu_affinity(list(range(os.cpu_count())))
+    
     def createList(threadNo):
         global N
 
@@ -612,6 +663,8 @@ def multiThread(showResults):
     
                 result = math.sqrt(item)
 
+        print("[{}{}-cT{}] Instance complete!".format(colours.green(), threadNo, colours.reset()))
+
     def intense2(threadNo):
 
         global N
@@ -625,6 +678,8 @@ def multiThread(showResults):
     
                 result = item/(item+1/(item+1/2))
 
+        print("[{}{}-cT{}] Instance complete!".format(colours.green(), threadNo, colours.reset()))
+        
     if __name__ == "__main__": 
         if dynamicMode == True:
             threadCount = Threads
@@ -685,11 +740,18 @@ def multiThread(showResults):
         score = round((1/avgTime)*(math.e)*(2000*(1/math.log(threadCount+8,10))))
         clear()
 
+        if not dynamicMode and not fullTest:
+            data = [["", "", score, ""]]
+            filename = "DATA/corebenchdata.csv"
+            with open("DATA/corebenchdata.csv", "a", newline="", encoding="utf-8") as file:
+                writer = csv.writer(file)
+                writer.writerows(data)
+                
         if showResults == True:
             if dynamicMode == True:
                 print(f"{colours.grey()}DYNAMIC MODE IS ON{colours.reset()}")
                 print("------")
-            print(f"{colours.green()}Multi Thread Test Complete!{colours.reset()}")
+            print(f"{colours.green()}Multi Thread Test Complete!{colours.reset()} ({colours.grey()}{version}{colours.reset()})")
             print("------")
             print(f"{colours.magenta()}Total time{colours.reset()}: {totalTime} seconds")
             print(f"{colours.cyan()}Multi thread score{colours.reset()}: {score} points")
@@ -698,6 +760,9 @@ def multiThread(showResults):
 
 
 def fullCPUTest():
+    global fullTest, brandName
+
+    fullTest = True
     def clear():
 
         name = str(os.name)
@@ -715,7 +780,10 @@ def fullCPUTest():
         time.sleep(5)
         os.system("clear")
         for x in range(0,3):
-            print(f"{colours.magenta()}{3-x}{colours.reset()} seconds...")
+            if 3-x != 1:
+                print(f"{colours.magenta()}{3-x}{colours.reset()} seconds...")
+            else:
+                print(f"{colours.magenta()}{3-x}{colours.reset()} second...")
             time.sleep(1)
             os.system("clear")
         
@@ -729,30 +797,120 @@ def fullCPUTest():
     
     totalScore = singleCoreScore+multiCoreScore+multiThreadScore
     finalScore = int(round(totalScore/3))
+
+    if not dynamicMode:
+        data = [[singleCoreScore, multiCoreScore, multiThreadScore, finalScore]]
+        filename = "DATA/corebenchdata.csv"
+        with open("DATA/corebenchdata.csv", "a", newline="", encoding="utf-8") as file:
+            writer = csv.writer(file)
+            writer.writerows(data)
     
     now = datetime.now()
     prettyDate = now.strftime("%d-%m-%y %H:%M")
+    prettyDateUnderscore = now.strftime("%d-%m-%y_%H:%M")
     if dynamicMode == True:
         print(f"{colours.grey()}DYNAMIC MODE IS ON{colours.reset()}")
         print("------")
-    print(f"{colours.green()}Overall CPU Performance Test Complete!{colours.reset()}")
+    print(f"{colours.green()}Overall CPU Performance Test Complete!{colours.reset()} ({colours.grey()}{version}{colours.reset()})")
     print("------")
     print(f"{colours.magenta()}Total points scored{colours.reset()}: {totalScore} || (S:{singleCoreScore}, M:{multiCoreScore}, MT:{multiThreadScore})")
-    print(f"{colours.cyan()}Overall score{colours.reset()}: {finalScore}")
+    print(f"[{colours.cyan()}Overall score{colours.reset()}: {finalScore}]")
 
-    f=open("corebenchinfo.txt","a")
-    f.write(f"\n\n{prettyDate} Results:\n------\nSingle Core: {singleCoreScore}\nMulti Core: {multiCoreScore}\nMulti Thread: {multiThreadScore}\nAverage Score: {finalScore}")
-    f.close()
+    try:
+        with open("corebenchinfo.txt", "a") as f:
+            if dynamicMode == False:
+                f.write(f"\n\n({version}) {prettyDate} Results:\n------\nSingle Core: {singleCoreScore}\nMulti Core: {multiCoreScore}\nMulti Thread: {multiThreadScore}\nAverage Score: {finalScore}")
+            else:
+                f.write(f"\n\n{prettyDate} Results:\n------\nSingle Core: {singleCoreScore}\nMulti Core: {multiCoreScore}\nMulti Thread: {multiThreadScore}\nAverage Score: {finalScore}\n^^^ DYNAMIC MODE SCORE ^^^")
+            f.flush()
+    except Exception as e:
+        print(f"{colours.red()}Error writing to file:{colours.reset()} {e}")
+
+    
+    #start data process here
+    currentScores = [singleCoreScore, multiCoreScore, multiThreadScore]
+
+    def avg(colName):
+        file = open("DATA/corebenchdata.csv", "r", newline="", encoding="utf-8")
+    
+        reader = csv.reader(file)
+    
+        header = next(reader)
+        col_index = header.index(colName)
+    
+        total = 0
+        n = 0
+        
+        for row in reader:
+            if str(row[col_index]).strip(" ") != "":
+                total += int(row[col_index])
+                n+=1
+    
+        avg = int(round(total/n))
+        file.close()
+        return avg
+
+    singleAvg = avg("single")
+    multiCoreAvg = avg("mcore")
+    multiThreadAvg = avg("mthread")
+
+    averageScores = [singleAvg, multiCoreAvg, multiThreadAvg]
+    barNames = ["Single core", "Multicore", "Multithread"]
+    
+    x = np.arange(len(barNames))
+    barWidth = 0.4
+    fig, ax = plt.subplots(figsize = (8,5))
+
+
+    current_bars = ax.bar(x - barWidth / 2, currentScores, width=barWidth, label = "Current Scores", color = "#26e2ec")
+
+    for i, bar in enumerate(current_bars):
+        height = bar.get_height()
+        ax.text(bar.get_x() + bar.get_width()/2, height,
+                f"{currentScores[i]:.0f}", 
+                ha="center", va="bottom")
+
+
+    average_bars = ax.bar(x + barWidth / 2, averageScores, width = barWidth, label = "Average Scores", color = "#cd26ec")
+
+    for i, bar in enumerate(average_bars):
+        height = bar.get_height()
+        ax.text(bar.get_x() + bar.get_width()/2, height,
+                f"{averageScores[i]:.0f}", 
+                ha="center", va="bottom")
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(barNames, rotation = 10)
+    ax.legend()
+    if dynamicMode:
+        plt.title("DYNAMIC - CoreBench {} results".format(brandName))
+    else:
+        plt.title("CoreBench {} results".format(brandName))
+    if dynamicMode:
+        plt.savefig("DATA/DYNAMIC - corebenchdata_{}.png".format(prettyDateUnderscore))
+    else:
+        plt.savefig("DATA/corebenchdata_{}.png".format(prettyDateUnderscore))
 
 if dynamicMode == True:
     print(f"{colours.grey()}DYNAMIC MODE IS ON{colours.reset()}")
     print("------")
 print(f"Welcome back, {colours.green()}{user}{colours.reset()}!")
+print(f"Version: {colours.grey()}{version}{colours.reset()}")
 prettyPrintData()
 
-while True:
+if osName.lower() in ["nt", "dos", "windows"]:
+    coreContext = multiprocessing.get_context("spawn")
+    #Set process priority
     p = psutil.Process(os.getpid())
+
+    p.nice(psutil.HIGH_PRIORITY_CLASS)
     
+else:
+    coreContext = multiprocessing.get_context("fork")
+
+while True:
+    fullTest = False
+    p = psutil.Process(os.getpid())
     p.cpu_affinity(list(range(os.cpu_count())))
     
     temp = input(colours.grey()+"Press [ENTER] to continue..."+colours.reset())
