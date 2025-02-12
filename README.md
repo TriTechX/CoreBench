@@ -142,3 +142,16 @@ Despite the tab saying "CoreBench105.py", it is actually CoreBench 1.0.7.
 ### Major Feature!
 - Added a set of data in .csv format called "corebenchdata.csv", created when not present and written to with each non-dynamic mode test result.
 - Full CPU test now produces a visual bar chart showing performance vs your system's overall average, called "corebenchdata.png"
+<br></br>
+
+### Version 1.1.1
+
+- Added "test commands" due to the growing number of tests.<br>
+```py
+"sc"/"st" - Single core test
+"mc" - Multicore test
+"mt" - Multithread test
+"nic"/"n" - Internet speed test
+"fullc"/"fc" - Full CPU test
+```
+Add "-d" to the end of your command to run the test in dynamic mode. The [CTRL] + [C] shortcut has been removed.
