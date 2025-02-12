@@ -1,9 +1,8 @@
 py-cpuinfo
 psutil
 GPUtil
-pick
-distutils
 setuptools
 speedtest-cli
 matplotlib
 numpy
+distro
