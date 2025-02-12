@@ -17,7 +17,6 @@ import csv
 import cpuinfo
 import psutil
 import GPUtil
-from pick import pick
 import distro
 import speedtest
 import matplotlib as mpl
@@ -27,7 +26,22 @@ import numpy as np
 import colours
 #package functions
 mpl.use("Agg")
+homedir = os.getcwd()
 
+# s'il vous plaît exterminer la vermine mercy bookoo
+# if you can find a way to optimise the loading times that would be good
+# i know it says GPU test in the notes, please do not make the GPU test because it requires pyCUDA and other cuda stuff that is beyond the storage limit for this account, I'll do it when I move to a collab or something idk
+
+
+try:
+    os.mkdir("DATA")
+    os.chdir(homedir)
+except PermissionError:
+    print("Failed to make DATA directory. Please give CoreBench rw access to its current directory.")
+    exit()
+except FileExistsError:
+    pass
+    os.chdir(homedir)
 
 def clear():
 
@@ -39,6 +53,7 @@ def clear():
 
 clear()
 
+#this is a part of the loading process that happens before the loading screen
 def prefetch():
     global osName, memRaw, brandName, hostname, localIp, done
     osName = platform.system()
@@ -48,23 +63,17 @@ def prefetch():
     localIp = socket.gethostbyname(socket.gethostname())
     done = True
 
+#this shows the activating screen
 def preload():
     global done
     print(colours.grey() + "Activating..." + colours.reset())
     while done == False:
         time.sleep(0.01)
 
-try:
-    print(colours.grey()+"Press [CTRL] + [C] to enter dynamic mode."+colours.reset())
-    time.sleep(3)
-    dynamicMode = False
-except KeyboardInterrupt:
-    clear()
-    print(colours.grey()+"DYNAMIC MODE ACTIVATED, SCORES WILL NOT BE SUBMITTED."+colours.reset())
-    dynamicMode = True
-    time.sleep(1)
-    clear()
-clear()
+#prepares for dynamic mode, just adjusts the CPU tests depending on how many CPU cores and threads you have
+dynamicMode = False
+
+#runs the activating process
 if __name__ == "__main__":
     try:
         grep = threading.Thread(target=prefetch)
@@ -85,9 +94,11 @@ if __name__ == "__main__":
 ### ZONE OF EXPERIMENTATION ###
 ### END OF ZONE ###
 
+#yeah
 def get_user():
     return getpass.getuser()
 
+#makes sure it's running admin
 if str(os.name).lower() in ["nt", "dos", "windows"]:
     def checkRoot():
         try:
@@ -97,7 +108,6 @@ if str(os.name).lower() in ["nt", "dos", "windows"]:
 else:
     def checkRoot():
         return os.getuid() == 0
-
 if checkRoot:
     pass
 else:
@@ -105,80 +115,86 @@ else:
     temp = input(colours.grey() + "Press [ENTER] to continue..." + colours.reset())
     
 
-#Get system information
+#Get system information, runs during the main load
 def getData():
     try:
     
         global hostname, GPUs, osName, architecture, brandName, clockSpeed, CPUs, memRaw, memory, endLoad, distroName, localIp, Threads, threadsPerCore, osNamePretty, user, version
-        
-        hostname = socket.gethostname()
-        localIp = socket.gethostbyname(socket.gethostname())
-        GPUs = GPUtil.getGPUs()
-        osName = platform.system()
-        architecture = platform.machine()
-        brandName = cpuinfo.get_cpu_info()["brand_raw"]
-        clockSpeed = cpuinfo.get_cpu_info()["hz_advertised_friendly"]
-        clockList = clockSpeed.split(" ")
-        clockSpeed = float(clockList[0])
-        clockSpeed = round(clockSpeed,2)
-        clockSpeed = str(clockSpeed) + " GHz"
-        CPUs = psutil.cpu_count(logical=False)
-        Threads = os.cpu_count()
-        threadsPerCore= int(os.cpu_count())/int(CPUs)
-        memRaw = round(((psutil.virtual_memory().total)/(1e+6)))
-        memory = round(((psutil.virtual_memory().total)/(1e+9)),2)
-        user = get_user()
-        if osName in ["Linux"]:
-            time.sleep(1)
-            distroName = str(distro.name(pretty=True))
+        try:
+            hostname = socket.gethostname()
+            localIp = socket.gethostbyname(socket.gethostname())
+            GPUs = GPUtil.getGPUs()
+            osName = platform.system()
+            architecture = platform.machine()
+            brandName = cpuinfo.get_cpu_info()["brand_raw"]
+            clockSpeed = cpuinfo.get_cpu_info()["hz_advertised_friendly"]
+            clockList = clockSpeed.split(" ")
+            clockSpeed = float(clockList[0])
+            clockSpeed = round(clockSpeed,2)
+            clockSpeed = str(clockSpeed) + " GHz"
+            CPUs = psutil.cpu_count(logical=False)
+            Threads = os.cpu_count()
+            threadsPerCore= int(os.cpu_count())/int(CPUs)
+            memRaw = round(((psutil.virtual_memory().total)/(1e+6)))
+            memory = round(((psutil.virtual_memory().total)/(1e+9)),2)
+            user = get_user()
+            if osName in ["Linux"]:
+                time.sleep(1)
+                distroName = str(distro.name(pretty=True))
 
-            def distroColour():
-                result = subprocess.run(["neofetch"], capture_output=True, text=True)
-    
-                f=open("NeofetchOut.txt", "w")
-                f.write(result.stdout)
-                f.close()
-    
-                file_path = "NeofetchOut.txt"
-                f=open("NeofetchOut.txt", "r")
-                contents=f.read()
-                pattern = r"\033\[(3[0-7]|9[0-7])m"
-                match = re.findall(pattern, contents)
-    
-                while "37" in match or "97" in match:
-                    i=-1
-                    for item in match:
-                        i+=1
-                        if item.strip() == "97" or item.strip() == "37":
-                            match.pop(i)
-    
-    
-                distroColourCode = f"\033[{match[0]}m"
-                return distroColourCode
-            osNamePretty=f"{distroColour()}{distroName}"
-            os.remove("NeofetchOut.txt")
+                def distroColour():
+                    result = subprocess.run(["neofetch"], capture_output=True, text=True)
         
-        else:
-            if osName.lower() in ["nt", "dos", "windows"]:
-                osNamePretty=colours.blue() + osName
-            else:
-                osNamePretty=colours.grey() + osName
+                    f=open("NeofetchOut.txt", "w")
+                    f.write(result.stdout)
+                    f.close()
+        
+                    file_path = "NeofetchOut.txt"
+                    f=open("NeofetchOut.txt", "r")
+                    contents=f.read()
+                    pattern = r"\033\[(3[0-7]|9[0-7])m"
+                    match = re.findall(pattern, contents)
+        
+                    while "37" in match or "97" in match:
+                        i=-1
+                        for item in match:
+                            i+=1
+                            if item.strip() == "97" or item.strip() == "37":
+                                match.pop(i)
+        
+        
+                    distroColourCode = f"\033[{match[0]}m"
+                    return distroColourCode
+                osNamePretty=f"{distroColour()}{distroName}"
+                os.remove("NeofetchOut.txt")
             
-    except Exception as e:
-        f=open("log.txt","w")
-        f.write(e)
-        f.close()
+            else:
+                if osName.lower() in ["nt", "dos", "windows"]:
+                    osNamePretty=colours.blue() + osName
+                else:
+                    osNamePretty=colours.grey() + osName
+                
+        except Exception as e:
+            f=open("log.txt","w")
+            f.write(str(e))
+            f.close()
+            
+        #UPDATE THIS WITH EVERY VERSION
+        version = "1.1.0"
+        #UPDATE THIS WITH EVERY VERSION
         
-    #UPDATE THIS WITH EVERY VERSION
-    version = "1.1.0"
-    #UPDATE THIS WITH EVERY VERSION
-    
-    endLoad = True
-
+        endLoad = True
+    #the classic messages we always have, feel free to add, trying to keep this one less bloated
+    except Exception as e:
+        f = open("log.txt","w")
+        f.write(str(e))
+        f.close()
 messages = ["So, you're back...", "Hello there!", "It's hot in here...", "400FPS", "Disabling frame generation...", "RTX ON", "Removing nanites...", "Stealing your personal information...", "Pro tip: bench", "Sussy Bucket", "No standard users allowed!", "Connecting to the (totally functional) CoreBench database...", "Getting more ping...", "Optimizing...", "Initiating...", "WELCOME.", f"Here with your {brandName} I see...", f"{osName}? A fellow man of culture...", f"Eating all {memRaw}MB of RAM...", "Overclocking...", "Deleting main.py...", "Always remember to remove the French language pack!", f"Not much of a {osName} fan myself, but you do you...", f"Welcome back {hostname}.", f"Haha! Got your IP! Seriously! {localIp}", "I use Arch btw", "I use Core btw", "Over 6GHz!", "Bringing out the Intel Pentium...", "Gathering texel fillrate...", "Collecting frames...", "No fake frames here!", "Changing boot order...", "Imagine if you were using this on Windows lol", "Still held prisoner by Replit.", "It's dangerous to go alone.", "All your bench are belong to us.", "GPU bench coming soon. Maybe.", "Unused RAM is useless RAM. Give some to me."]
 
 message = messages[random.randint(0,len(messages)-1)]
 
+
+#runs the loading screen
 def loadingScreen():
     try:
     
@@ -192,6 +208,7 @@ def loadingScreen():
         
         global endLoad
         clear()
+        
         while endLoad == False:
             
             print(colours.cyan() + """░█████╗░░█████╗░██████╗░███████╗""")
@@ -760,7 +777,7 @@ def multiThread(showResults):
 
 
 def fullCPUTest():
-    global fullTest, brandName
+    global fullTest, brandName, version
 
     fullTest = True
     def clear():
@@ -883,13 +900,80 @@ def fullCPUTest():
     ax.set_xticklabels(barNames, rotation = 10)
     ax.legend()
     if dynamicMode:
-        plt.title("DYNAMIC - CoreBench {} results".format(brandName))
+        plt.title("DYNAMIC - CoreBench (v{}) {} results".format(version, brandName))
     else:
-        plt.title("CoreBench {} results".format(brandName))
+        plt.title("CoreBench (v{}) {} results".format(version, brandName))
     if dynamicMode:
         plt.savefig("DATA/DYNAMIC - corebenchdata_{}.png".format(prettyDateUnderscore))
     else:
         plt.savefig("DATA/corebenchdata_{}.png".format(prettyDateUnderscore))
+
+
+def test_speed():
+    try:
+        print("Initiating internet speed test...")
+        print("------")
+
+        for x in range(0,10):
+            try:
+                st = speedtest.Speedtest()
+                connected=True
+                break
+            except:
+                connected=False
+                pass
+                
+        if not connected:
+            st = speedtest.Speedtest()
+                
+        clear()
+
+        print(f"Test {colours.green()}initiated{colours.reset()}. This {colours.red()}shouldn't{colours.reset()} take too long.")
+        print("------")
+        downloads = []
+        uploads = []
+        pings = []
+        
+        print(f"[{colours.grey()}IS{colours.reset()}] Attempting connection to server...")
+        st.get_best_server()
+        
+        for x in range(0,3):
+            
+    
+            print(f"[{colours.cyan()}IS{colours.reset()}] Running download test...")
+            download = st.download()/1e+6
+            downloads.append(download)
+    
+            print(f"[{colours.cyan()}IS{colours.reset()}] Running upload test...")
+            upload = st.upload()/1e+6
+            uploads.append(upload)
+    
+            print(f"[{colours.cyan()}IS{colours.reset()}] Pinging server...")
+            ping = st.results.ping
+            pings.append(ping)
+    
+        clear()
+        
+        download = round(sum(downloads)/3,2)
+        upload = round(sum(uploads)/3,2)
+        ping = round(sum(pings)/3,2)
+        
+
+        score = int(round((((download+(upload*15)))/2)-ping))
+        
+        print(f"{colours.green()}Internet Speed Test Complete!{colours.reset()} ({colours.grey()}{version}{colours.reset()})")
+        print(f"{colours.magenta()}Score{colours.reset()}: {score}")
+        print("------")
+        print(f"{colours.magenta()}Download speed{colours.reset()}: {download} {colours.cyan()}Mbps{colours.reset()}")
+        print(f"{colours.cyan()}Upload speed{colours.reset()}: {upload} {colours.magenta()}Mbps{colours.reset()}")
+        print(f"{colours.green()}Ping{colours.reset()}: {ping} {colours.cyan()}ms{colours.reset()}")
+
+    except speedtest.ConfigRetrievalError as e:
+        print(f"{colours.red()}Failed to connect to server.{colours.reset()}")
+        print(f"{colours.grey()}This could potentially be a rate limit, please try again later.{colours.reset()}")
+        f=open("error.txt","w")
+        f.write(e)
+        f.close()
 
 if dynamicMode == True:
     print(f"{colours.grey()}DYNAMIC MODE IS ON{colours.reset()}")
@@ -908,6 +992,7 @@ if osName.lower() in ["nt", "dos", "windows"]:
 else:
     coreContext = multiprocessing.get_context("fork")
 
+
 while True:
     fullTest = False
     p = psutil.Process(os.getpid())
@@ -917,17 +1002,81 @@ while True:
     
     clear()
     
-    time.sleep(1)
+    time.sleep(0.1)
     
     #Main program
+    '''
+    sc - single core
+    st - single core
+    mc - multi core
+    mt - multi thread
+    nic - internet speed
+    n - internet speed
+    '''
+    validChoice = ["sc", "st", "mc", "mt", "nic", "n", "fullc", "fc"]
+    validArgs = ["d"]
+    valid = False
+    print(f"Please enter the {colours.magenta()}test command{colours.reset()}.")
+    while not valid:
+        args = None
+        multiArgs = False
+        skip = False
+        
+        choice = input("=> ")
+        choice = choice.lower().strip(" ")
+        try:
+            #Checks to see if it contains args
+            try:
+                choice, args = choice.split(" -")
+            except:
+                choice, args = choice.split("-")
+                
+            multiArgs = True
+            if choice in validChoice:
+                skip = False
+            else:
+                skip = True
+        except:
+            #Has no args, gets sent here
+            #If the choice is valid, it goes through the next validation process     
+            if choice in validChoice:
+                valid = True
+                skip = False
+            else:
+                valid = False
+                skip = True
+        
+        if not skip:
+            if not multiArgs:
+                dynamicMode = False
+                valid = True
+                #Checks for correct base but no args
+            elif args == "d":
+                dynamicMode = True
+                valid = True
+                #Dynamic mode
+            else:
+                dynamicMode = False
+                valid = False
+                #No valid arguments
+
+        else:
+            valid = False
+            print(f"{colours.red()}Invalid command{colours.reset()}")
+            #Invalid base
+
+    base = choice
     
-    question = "Please select the test you wish to perform"
-    if gpuPresent == False:
-        choices = ["CPU: Single core & thread test", "CPU: Multi core test", "CPU: Multi thread test", "CPU: Full test"]
-    else:
-        choices = ["CPU: Single core & thread test", "CPU: Multi core test", "CPU: Multi thread test", "CPU: Full test", "GPU: Matrix performance test"]
-    
-    option, index = pick(choices, question, indicator='=>', default_index=0)
+    if base in ["sc", "st"]:
+        index = 0
+    elif base == "mc":
+        index = 1
+    elif base == "mt":
+        index = 2
+    elif base in ["fullc", "fc"]:
+        index = 3
+    elif base in ["n", "nic"]:
+        index = 4
         
     if index == 0:
         singleCore(True)
@@ -942,5 +1091,5 @@ while True:
         fullCPUTest()
         prettyPrintData()
     elif index == 4:
-        #runGPU
-        pass
+        test_speed()
+        prettyPrintData()
