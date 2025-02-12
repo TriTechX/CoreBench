@@ -46,6 +46,7 @@ This bench is more accurate on lower-end systems running Core. High end systems 
 - Download files ```main.py```, ```colours.py```, and ```requirements.txt```
 - Put them all in the same directory.
 - Enter this directory and run ```pip install -r requirements.txt```
+- run ```sudo apt install neofetch```
 - Then run ```python3 main.py```
 - Linux portable image coming soon™
 - dmg will never exist
