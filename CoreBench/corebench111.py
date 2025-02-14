@@ -180,7 +180,7 @@ def getData():
             f.close()
             
         #UPDATE THIS WITH EVERY VERSION
-        version = "1.1.0"
+        version = "1.1.1"
         #UPDATE THIS WITH EVERY VERSION
         
         endLoad = True
