@@ -156,3 +156,7 @@ Despite the tab saying "CoreBench105.py", it is actually CoreBench 1.0.7.
 "fullc"/"fc" - Full CPU test
 ```
 Add "-d" to the end of your command to run the test in dynamic mode. The [CTRL] + [C] shortcut has been removed.
+
+<br>Note to self for FUTURE UPDATES
+- MAKE MC TEST MORE DEMANDING
+- ADD AN ARGUMENT FOR THE NUMBER OF TIMES YOU WANT A TEST TO RUN (sc -d *3), (mc *4) etc
