@@ -25,4 +25,4 @@ nic OR n - network
 ```
 
 Currently, the only argument is "d", which runs the test in "Dynamic Mode" which scales the scores and tests based on how many cores and threads are in your processor.<br>
-Use: ```mc -d```, runs the single core test in dynamic mode.
+Use example: ```mc -d```, runs the single core test in dynamic mode.
