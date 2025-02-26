@@ -157,6 +157,9 @@ Despite the tab saying "CoreBench105.py", it is actually CoreBench 1.0.7.
 ```
 Add "-d" to the end of your command to run the test in dynamic mode. The [CTRL] + [C] shortcut has been removed.
 
-<br>Note to self for FUTURE UPDATES
-- MAKE MC TEST MORE DEMANDING
-- ADD AN ARGUMENT FOR THE NUMBER OF TIMES YOU WANT A TEST TO RUN (sc -d *3), (mc *4) etc
+### Version 1.2.0
+- Completely reworks the single core algorithms.
+- Stage 1 is now a gravity and collision detection simulator.
+- Stage 2 simulates simple trigonometric calculations in quick succession and vector maths.
+- Stage 3 calculates floating point performance for the single core through lots of demanding vector calculations.
+- Fixed various stability issues.
