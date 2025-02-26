@@ -28,7 +28,7 @@ import colours
 mpl.use("Agg")
 homedir = os.getcwd()
 
-# s'il vous plaît exterminer la vermine mercy bookoo
+# s'il vous plaît exterminer la vermine mercy bookoooooooo
 # if you can find a way to optimise the loading times that would be good
 # i know it says GPU test in the notes, please do not make the GPU test because it requires pyCUDA and other cuda stuff that is beyond the storage limit for this account, I'll do it when I move to a collab or something idk
 
@@ -180,7 +180,7 @@ def getData():
             f.close()
             
         #UPDATE THIS WITH EVERY VERSION
-        version = "1.1.1"
+        version = "1.2.0"
         #UPDATE THIS WITH EVERY VERSION
         
         endLoad = True
@@ -377,124 +377,273 @@ if not os.path.exists(filename) or os.path.getsize(filename) == 0:
         
     f.close()
 #write specifications to a file
-#single core CPU test
-def singleCore(showResults):
 
-    def oneSigFig(num):
-        output = int(round(num, 1-len(str(int(abs(num))))))
-        return output
-    
+#single core test algorithm rewrite
+def singleCoreCheck():
     p = psutil.Process(os.getpid())
-    for item in p.cpu_affinity():
-        try:
-            p.cpu_affinity([0])
-        except:
-            p.cpu_affinity(list(range(os.cpu_count()))) #reset
     
-    global SINGLENO, N
-    numList = []
+    validCore = False
+    try: #try
+        p.cpu_affinity([0])
+        validCore = True
+    except: #try harder
+        for item in p.cpu_affinity():
+            if validCore == True:
+                break
+            else:
+                try:
+                    p.cpu_affinity([item])
+                    validCore = True
+                except:
+                    p.cpu_affinity(list(range(os.cpu_count()))) #reset
 
-    SINGLENO = int(N/2)
-    #Stage 1, adds all the numbers to a list
+    if validCore == False:
+        quit() #give up
 
-    percent = 0
-    oldPercent = 0
-    print(f"Single Core test {colours.green()}initiated{colours.reset()}. This one takes a {colours.magenta()}while{colours.reset()}...")
-    print("------")
-    print("Stage 1: {}% done".format(percent))
+def singleCore(showResults):
+    global CPUs, fullTest
+
+    singleCoreCheck()
+
+    if dynamicMode == True:
+        coreCount = CPUs
+    else:
+        coreCount = 6
+
+    scoreList = []
+    timeList = []
+
+    percentageComplete = 0
+
+    ballHeight = 5000
+    
+    GFLUCTUATION = random.randint(-10,10)/10
+    ACCELERATION = 9.81+GFLUCTUATION
+    BOUNCECONSTANT = random.randint(1, 10)
+
+    timeSimulated = 0
+    timeIncrement = 1e-6
+    distanceTravelled = 0
+
+
+    timeToHit = math.sqrt(ballHeight/(0.5*ACCELERATION))
+
+    ticker = -1
+
+    timeList = []
 
     start = time.perf_counter()
 
-    for x in range(0,SINGLENO):
+    for x in range(0,3):
 
-        percent = int(oneSigFig((x/SINGLENO)*100))
+        ticker += 1
+        yVel = 0
+        timeSimulated = 0
+        oldPercentageComplete = -1
 
-        if oldPercent != percent:
-            clear()
-            print(f"Single Core test {colours.green()}initiated{colours.reset()}. This one takes a {colours.magenta()}while{colours.reset()}...")
-            print("------")
-            print("Stage 1: {}% done".format(percent))
+        roundStart = time.perf_counter()
+        while distanceTravelled < ballHeight:
 
-        numList.append(x)
+            percentageComplete = ((math.sqrt(distanceTravelled) / math.sqrt(ballHeight)) * (100 / 3)) + ((100 / 3) * ticker)
+            percentageComplete = round(percentageComplete,0)
 
-        oldPercent = percent
+            if oldPercentageComplete != percentageComplete:
+                clear()
+                print(f"{colours.cyan()}Stage 1{colours.reset()} in progress...")
+                print("[{}{}-sS{}] {}% Done".format(colours.grey(),1,colours.reset(),int(round(percentageComplete))))
+                try:
+                    timeElapsed = time.perf_counter()-roundStart
+                    print("------")
+                    print("Round {} stats".format(ticker+1))
+                    print("---")
+                    print(f"Velocity: {round(-yVel,2)}m/s")
+                    print(f"Distance: {round(distanceTravelled,2)}m")
+                    print(f"Time simulated: {round(timeSimulated,2)}s")
+                    print("---")
+                    print(f"Time elapsed: {int(round(timeElapsed))}s")
+                except:
+                    pass
+
+            oldPercentageComplete = percentageComplete
+
+            yVel = yVel-timeIncrement*ACCELERATION
+            timeSimulated+=timeIncrement
+
+            
+            distanceTravelled = 0.5 * ACCELERATION * timeSimulated**2
+
+        yVel = -yVel - (BOUNCECONSTANT)
+
+        timeList.append(timeSimulated)
+
+        u = yVel
+        a = ACCELERATION
+
+        distanceTravelled = 0
+        estimatedHeight =  (u**2)/(2*a)
 
     end = time.perf_counter()
-    stageOne = end-start
+
+    totalTime = end-start
+    avgTime = (end-start)/3
+    score = round((1/(avgTime/(3*math.e)))*(math.e)*(1000*(1/math.log(coreCount+4,10))))
+
+    allPassTimeAvg = sum(timeList)/3
+    allPassTimeAvg = float(str(allPassTimeAvg).rstrip("0").rstrip("."))
+
+    #Stage 1 algorithm end#
+
+    percentageAccuracy = 100.0 - (((allPassTimeAvg-timeToHit)/timeToHit) *100.0)
+
+    print("---")
+    print("Stage 1 complete.")
+    print(f"Physics simulation accuracy: {round(percentageAccuracy)}%")
+
+    scoreList.append(score)
+    timeList.append(totalTime)
     
-    #Stage 2, finds the square root of all of those numbers
+    time.sleep(3)
 
-    percent = 0
-    oldPercent = 0
+    #Stage 2
 
-    clear()
-    print(f"Single Core test {colours.green()}initiated{colours.reset()}. This one takes a {colours.magenta()}while{colours.reset()}...")
-    print("------")
-    print("Stage 2: {}% done".format(percent))
+    percentageComplete = 0
+
+    arrowHeight = 5000
+    
+    GFLUCTUATION = random.randint(-10,10)/10
+    ACCELERATION = 9.81+GFLUCTUATION
+
+    timeSimulated = 0
+    timeIncrement = 1e-6
+
+    yDistanceTravelled = 0
+    xDistanceTravelled = 0
+
+    yVel = 0
+    xVel = 50
+
+    timeToHit = math.sqrt(arrowHeight/(0.5*ACCELERATION))
+
+    ticker = -1
+
+    timeList = []
+    oldPercentageComplete = -1
 
     start = time.perf_counter()
 
-    i=0
+    for x in range(0,3):
 
-    for item in numList:
+        ticker+=1
+        yVel = 0
+        yDistanceTravelled = 0
+        xDistanceTravelled = 0
+        timeSimulated = 0
 
-        i+=1
+        roundStart = time.perf_counter()
+        while yDistanceTravelled < arrowHeight:
 
-        percent = oneSigFig((i/SINGLENO)*100)
+            percentageComplete = ((math.sqrt(yDistanceTravelled) / math.sqrt(arrowHeight)) * (100 / 3)) + ((100 / 3) * ticker)
 
-        if oldPercent != percent:
+            if round(oldPercentageComplete) != round(percentageComplete):
+
+                clear()
+                print(f"{colours.cyan()}Stage 2{colours.reset()} in progress...")
+                print("[{}{}-sS{}] {}% Done".format(colours.grey(),2,colours.reset(),int(round(percentageComplete))))
+                try:
+                    timeElapsed = time.perf_counter()-roundStart
+                    print("------")
+                    print("Round {} stats:".format(ticker+1))
+                    print("---")
+                    print(f"Angle: {round(angle,2)}°")
+                    print(f"Y velocity: {round(-yVel,2)}m/s")
+                    print(f"Distance fallen: {round(yDistanceTravelled,2)}m")
+                    print(f"Time simulated: {round(timeSimulated,2)}s")
+                    print(f"Resultant velocity: {round(resultantVelocity,2)}m/s")
+                    print("---")
+                    print(f"Time elapsed: {int(round(timeElapsed))}")
+
+                except:
+                    pass
+            
+            oldPercentageComplete = percentageComplete
+
+            yVel = yVel - timeIncrement*ACCELERATION
+
+            timeSimulated+=timeIncrement
+            yDistanceTravelled = 0.5 * ACCELERATION * timeSimulated**2
+
+            xDistanceTravelled = xVel*timeSimulated
+
+            angle = -math.atan2(yVel,xVel)*(180/math.pi) #radians to degrees
+            resultantVelocity = math.sqrt(yVel**2+xVel**2) #calculates the resultant velocity
+    end = time.perf_counter()
+
+    totalTime = end-start
+    avgTime = (end-start)/3
+    score = round((1/(avgTime/(3*math.e)))*(math.e)*(1000*(1/math.log(coreCount+4,10))))
+
+    print("---")
+    print("Stage 2 complete.")
+
+    scoreList.append(score)
+    timeList.append(totalTime)
+
+    time.sleep(3)
+
+    #Stage 3: calculate GFLOPS of one core
+    N = 1024
+    matA = np.random.rand(N, N)
+    matB = np.random.rand(N, N)
+
+    start = time.perf_counter()
+
+    oldPercentageComplete = -1
+    I = 5000
+
+    for x in range(0,I):
+        startTemp = time.perf_counter()
+        percentageComplete = (x/I)*100
+
+        if int(round(oldPercentageComplete)) != int(round(percentageComplete)):
             clear()
-            print(f"Single Core test {colours.green()}initiated{colours.reset()}. This one takes a {colours.magenta()}while{colours.reset()}...")
-            print("------")
-            print("Stage 2: {}% done".format(percent))
+            print(f"{colours.cyan()}Stage 3{colours.reset()} in progress...")
+            print("[{}{}-sS{}] {}% Done".format(colours.grey(),3,colours.reset(),int(round(percentageComplete))))
 
-        for number in range(item-100,item):
-            result=math.sqrt(abs(number))
+            try:
+                print("------")
+                print("Stats:")
+                print("---")
+                print(f"GFLOPs for last run: {int(round(flopTemp/1000000000))}")
+            except:
+                pass
+        oldPercentageComplete = percentageComplete
 
-        oldPercent = percent
+        matC = np.dot(matA, matB)  # Matrix multiplication
+
+        endTemp = time.perf_counter()
+
+        flopTemp = (2 * N**3) / (endTemp - startTemp)
 
     end = time.perf_counter()
-    stageTwo = end-start
 
-    #Stage 3, goes through every element in the list, finds its square root then pops it.
+    totalTime = end-start
+    avgTime = totalTime/6 #not avg but idgaf
+    score = round((1/(avgTime/(3*math.e)))*(math.e)*(1000*(1/math.log(coreCount+4,10))))
 
-    percent = 0
-    oldPercent = 0
+    timeList.append(totalTime)
+    scoreList.append(score)
 
-    clear()
-    print(f"Don't {colours.red()}worry{colours.reset()} if this one takes ages.")
+    flops = (2 * N**3) / ((end - start)/I)
+    gflops = flops/1000000000
+
+    print("---")
+    print(f"GFLOPs Performance: {gflops}")
     print("------")
-    print("Stage 3: {}% done".format(percent))
+    time.sleep(3)
 
-    start = time.perf_counter()
-
-    i=0
-
-    for item in numList:
-
-        i+=1
-
-        percent = oneSigFig((i/(SINGLENO/2))*100)
-
-        if oldPercent != percent:
-            clear()
-            print(f"Don't {colours.red()}worry{colours.reset()} if this one takes ages.")
-            print("------")
-            print("Stage 3: {}% done".format(percent))
-
-        result = math.sqrt(item)
-        numList.pop(i-1)
-
-        oldPercent = percent
-
-    end=time.perf_counter()
-    stageThree=end-start
-
-    #Calculates the total time and score.
-
-    totalTime = stageOne + stageTwo + stageThree
-    avgTime = totalTime/3
-    score = round((1/avgTime)*(math.e)*(1000*3))
+    score = int(round(sum(scoreList)/3))
+    totalTime = sum(timeList)
+    time.sleep(3)
     clear()
 
     if not dynamicMode and not fullTest:
@@ -503,7 +652,7 @@ def singleCore(showResults):
         with open("DATA/corebenchdata.csv", "a", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
             writer.writerows(data)
-    
+
     if showResults == True:
         if dynamicMode == True:
             print(f"{colours.grey()}DYNAMIC MODE IS ON{colours.reset()}")
@@ -513,7 +662,6 @@ def singleCore(showResults):
         print(f"{colours.cyan()}Single core score{colours.reset()}: {score}")
     
     return score
-
 
 
 #Multicore test
