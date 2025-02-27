@@ -180,7 +180,7 @@ def getData():
             f.close()
             
         #UPDATE THIS WITH EVERY VERSION
-        version = "1.2.0"
+        version = "1.2.1"
         #UPDATE THIS WITH EVERY VERSION
         
         endLoad = True
@@ -454,13 +454,13 @@ def singleCore(showResults):
                 try:
                     timeElapsed = time.perf_counter()-roundStart
                     print("------")
-                    print("Round {} stats".format(ticker+1))
+                    print("{}Round {} stats{}:".format(colours.green(),ticker+1,colours.reset()))
                     print("---")
-                    print(f"Velocity: {round(-yVel,2)}m/s")
-                    print(f"Distance: {round(distanceTravelled,2)}m")
-                    print(f"Time simulated: {round(timeSimulated,2)}s")
+                    print(f"{colours.magenta()}Velocity{colours.reset()}: {round(-yVel,2)}m/s")
+                    print(f"{colours.magenta()}Distance{colours.reset()}: {round(distanceTravelled,2)}m")
+                    print(f"{colours.magenta()}Time simulated{colours.reset()}: {round(timeSimulated,2)}s")
                     print("---")
-                    print(f"Time elapsed: {int(round(timeElapsed))}s")
+                    print(f"{colours.magenta()}Time elapsed{colours.reset()}: {int(round(timeElapsed))}s")
                 except:
                     pass
 
@@ -496,8 +496,8 @@ def singleCore(showResults):
     percentageAccuracy = 100.0 - (((allPassTimeAvg-timeToHit)/timeToHit) *100.0)
 
     print("---")
-    print("Stage 1 complete.")
-    print(f"Physics simulation accuracy: {round(percentageAccuracy)}%")
+    print(f"{colours.green()}Stage 1 complete{colours.reset()}.")
+    print(f"{colours.magenta()}Physics simulation accuracy{colours.reset()}: {round(percentageAccuracy)}%")
 
     scoreList.append(score)
     timeList.append(totalTime)
@@ -552,15 +552,15 @@ def singleCore(showResults):
                 try:
                     timeElapsed = time.perf_counter()-roundStart
                     print("------")
-                    print("Round {} stats:".format(ticker+1))
+                    print("{}Round {} stats{}:".format(colours.green(),ticker+1,colours.reset()))
                     print("---")
-                    print(f"Angle: {round(angle,2)}°")
-                    print(f"Y velocity: {round(-yVel,2)}m/s")
-                    print(f"Distance fallen: {round(yDistanceTravelled,2)}m")
-                    print(f"Time simulated: {round(timeSimulated,2)}s")
-                    print(f"Resultant velocity: {round(resultantVelocity,2)}m/s")
+                    print(f"{colours.magenta()}Angle{colours.reset()}: {round(angle,2)}°")
+                    print(f"{colours.magenta()}Y velocity{colours.reset()}: {round(-yVel,2)}m/s")
+                    print(f"{colours.magenta()}Distance fallen{colours.reset()}: {round(yDistanceTravelled,2)}m")
+                    print(f"{colours.magenta()}Time simulated{colours.reset()}: {round(timeSimulated,2)}s")
+                    print(f"{colours.magenta()}Resultant velocity{colours.reset()}: {round(resultantVelocity,2)}m/s")
                     print("---")
-                    print(f"Time elapsed: {int(round(timeElapsed))}")
+                    print(f"{colours.magenta()}Time elapsed{colours.reset()}: {int(round(timeElapsed))}")
 
                 except:
                     pass
@@ -583,7 +583,7 @@ def singleCore(showResults):
     score = round((1/(avgTime/(3*math.e)))*(math.e)*(1000*(1/math.log(coreCount+4,10))))
 
     print("---")
-    print("Stage 2 complete.")
+    print(f"{colours.green()}Stage 2 complete{colours.reset()}.")
 
     scoreList.append(score)
     timeList.append(totalTime)
@@ -611,9 +611,9 @@ def singleCore(showResults):
 
             try:
                 print("------")
-                print("Stats:")
+                print(f"{colours.green()}Stats{colours.reset()}:")
                 print("---")
-                print(f"GFLOPs for last run: {int(round(flopTemp/1000000000))}")
+                print(f"{colours.magenta()}GFLOPs for last run{colours.reset()}: {int(round(flopTemp/1000000000))}")
             except:
                 pass
         oldPercentageComplete = percentageComplete
@@ -637,15 +637,17 @@ def singleCore(showResults):
     gflops = flops/1000000000
 
     print("---")
-    print(f"GFLOPs Performance: {gflops}")
+    print(f"{colours.magenta()}GFLOPs Performance{colours.reset()}: {gflops}")
+    print(f"{colours.green()}Stage 3 complete{colours.reset()}.")
     print("------")
+
     time.sleep(3)
+
+    clear()
 
     score = int(round(sum(scoreList)/3))
     totalTime = sum(timeList)
-    time.sleep(3)
-    clear()
-
+    
     if not dynamicMode and not fullTest:
         data = [[score, "", "", ""]]
         filename = "DATA/corebenchdata.csv"
@@ -660,6 +662,8 @@ def singleCore(showResults):
         print(f"{colours.green()}Single Core Benchmark Complete!{colours.reset()} ({colours.grey()}{version}{colours.reset()})")
         print(f"{colours.magenta()}Total time{colours.reset()}: {totalTime} seconds")
         print(f"{colours.cyan()}Single core score{colours.reset()}: {score}")
+        print("---")
+        print(f"{colours.green()}Floating point operations performance{colours.reset()}: {round(gflops,2)} GFLOPs")
     
     return score
 
