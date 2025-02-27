@@ -58,13 +58,13 @@ This bench is more accurate on lower-end systems running Core. High end systems 
 
 Users running on Windows through Python interpreters may run into issues such as absurdly low scores, much longer loading times, and inefficient hardware utilization. The multicore method used in this program is NOT compatible with Windows. Higher end systems on Windows may achieve low scores compared to Linux users, as the benchmark was designed for Linux. If you desperately want to run this and get accurate results, I guess you could make a tiny partition for dual booting a Linux distro.
 
-#### Version 1.0.0
+#### Version 1.0.0 /xytro
 - As of CoreBench version 1.0.0, there is no storage of data. There may be in future updates when a simple cloud solution is found
 - This program lacks the ability to run GPU tests, it is currently limited to CPU single core, multi core, and multi thread benchmarks
 - This program lacks testing data, so what can be considered "good" and "bad" has not been determined yet, so scores are currently arbitrary. Feel free after executing this program to send me your info and scores at TriTechUX@gmail.com
 - During multicore and multithread tests, multiple lines of text will show for the progress of the different operations
 
-#### Version 1.0.1
+#### Version 1.0.1 /xytro
 - Changed RAM to calculate more accurately by showing two decimal places
 - Fixed misnaming of "totalTime" variable in the single core test
 - Optimised to run faster and obtain more accurate scores representative of the system
@@ -72,16 +72,16 @@ Users running on Windows through Python interpreters may run into issues such as
 - Fixed stage 2 multicore/multithread test progress showing one decimal place instead of only one significant figure
 - Balanced single core scores to be higher and more representative of the system's power
 
-#### Version 1.0.2
+#### Version 1.0.2 /xytro
 - Added full CPU performance test
 - Improved readability of test select menu
 - Renamed "info.txt" to "corebenchinfo.txt" as the name was too generic, and removal of this file could cause issues if the file is for other applications
 - Added all test results to full CPU performance test results screen
 
-#### Version 1.0.3
+#### Version 1.0.3 /xytro
 - Added checks for administrator/root permissions on startup
 
-#### Version 1.0.4
+#### Version 1.0.4 /xytro
 - Aimed to fix a few small issues with text formatting and RAM calculations
 - Added specific Linux distro identification to make recording results easier
 - Full CPU test no longer flashes results from each individual test
@@ -96,7 +96,7 @@ Users running on Windows through Python interpreters may run into issues such as
 - Updated core count to count physical CPU cores, and added a seperate info tab for threads - ruining my colour scheme >:(
 - Neofetch is now a dependency of CoreBench. It is utilised to get the colour of your distro.
 
-#### Version 1.0.5
+#### Version 1.0.5 /xytro
 - Added support for the Windows-coloured name in the "OS Name" tab (despite there being no Windows support)
 - Added more loading messages.
 - Added an activation screen when grabbing "essential" variable data.
@@ -111,15 +111,15 @@ Users running on Windows through Python interpreters may run into issues such as
 - Scores in dynamic mode are based on the ratio of cores/threads to 6 and 12.
 - Dynamic mode was finished on 05/02/2025.
 
-### Version 1.0.6
+#### Version 1.0.6 /xytro & avale
 - Changed method of grabbing name to getpass.getuser() instead of pwd.
 - Single core test was not guaranteed to be isolated to a single core. The single core test ignores hyperthreading, and runs on one core on one thread. This was hastily added after its discovery just after 105.
 ### CPU Utilisation Before 1.0.6<br> ![Before](https://i.ibb.co/snNxwvy/before.jpg "Before")<br>
 - As you can see, all the CPU cores activate at the same time, indicating that Python is using more than 1 core, as this is a 1 core per thread processor.
 ### CPU Utilisation After 1.0.6<br> ![Afterwards](https://i.ibb.co/prfMzQJF/afterwards.jpg "Afterwards")<br>
-- In the new 1.0.6 patch, only CPU 0 is fully utilised. The rest are supposed to be idling, but this is a Chromebook processor. (Thank you to psutil's cpu_affinity!!!)<br>Yes, this example is running on Windows. This does not mean Windows support is coming. I think. Maybe I should add a multiplier for Windows machines, or make a seperate database for Windows machines or... no.
+- In the new 1.0.6 patch, only CPU 0 is fully utilised. The rest are supposed to be idling, but this is a Chromebook processor. (Thank you avale for being smarter than me!!!)<br>Yes, this example is running on Windows. This does not mean Windows support is coming. I think. Maybe I should add a multiplier for Windows machines, or make a seperate database for Windows machines or... no.
 
-### Version 1.1.0
+#### Version 1.1.0 /xytro
 - Single core test doesn't take as long anymore.
 - The percentage shows to one significant figure rather than the nearest integer to prevent I/O bottleneck.
 - Moved the benchmark process code for multicore test into a main check.
@@ -127,11 +127,11 @@ Users running on Windows through Python interpreters may run into issues such as
 - Added one additional point to all test scores. Or did I?
 - Another reason that CoreBench runs badly on Windows has been discovered (other than overhead). Due to Windows' Multilevel Feedback Queue process scheduling method, CoreBench is treated like a background process, and punished for being demanding. Linux uses the Completely Fair scheduling method, which is why scores are so much higher and more definitive.<br>
 
-### Before High Priority
+#### Before High Priority
 ![Before](https://i.ibb.co/6cbj4Wwr/beforee.jpg "Before")
 
 
-### After High Priority
+#### After High Priority
 ![Afterwards](https://i.ibb.co/BHgZF1rf/after.jpg "Afterwards")<br>
 
 It takes an extra 8 seconds without high priority. This was WITH background processes running in both tests. (Brave browser idling)<br>
@@ -140,12 +140,12 @@ Despite the tab saying "CoreBench105.py", it is actually CoreBench 1.0.7.
 - Just realised it still says (c) TriTech 2024, meaning the copyright is outdated. That ain't good. Updated to (c) TriTech 2025 as of **7th February 2025**.
 - Added version no. and dynamic mode info to the corebenchinfo.txt file. A new set of results will be written to corebench.txt when you run a full CPU test.
 
-### Major Feature!
+#### Major Feature!
 - Added a set of data in .csv format called "corebenchdata.csv", created when not present and written to with each non-dynamic mode test result.
 - Full CPU test now produces a visual bar chart showing performance vs your system's overall average, called "corebenchdata.png"
 <br></br>
 
-### Version 1.1.1
+#### Version 1.1.1 /xytro
 
 - Added "test commands" due to the growing number of tests.<br>
 ```py
@@ -157,9 +157,14 @@ Despite the tab saying "CoreBench105.py", it is actually CoreBench 1.0.7.
 ```
 Add "-d" to the end of your command to run the test in dynamic mode. The [CTRL] + [C] shortcut has been removed.
 
-### Version 1.2.0
+#### Version 1.2.0 /xytro & avale
 - Completely reworks the single core algorithms.
 - Stage 1 is now a gravity and collision detection simulator.
 - Stage 2 simulates simple trigonometric calculations in quick succession and vector maths.
 - Stage 3 calculates floating point performance for the single core through lots of demanding vector calculations.
-- Fixed various stability issues.
+
+#### Version 1.2.1 /avale
+- Prettified single core text layout and colours.
+- Sorted out code order issues.
+- Added credits to readme.
+- Fixed title header layout on readme.
