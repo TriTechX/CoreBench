@@ -159,9 +159,26 @@ Add "-d" to the end of your command to run the test in dynamic mode. The [CTRL] 
 
 #### Version 1.2.0 /xytro & avale
 - Completely reworks the single core algorithms.
-- Stage 1 is now a gravity and collision detection simulator.
+#### Stage 1 Breakdown
+- Stage 1 initiates an object for falling by preparing values such as the strength of gravity and the fluctuation in gravitational field strength.
+- The object is then dropped from a height of 5,000 metres, and all necessary properties of the object are calculated to the precision of 1 microsecond until the object hits the ground.
+- Once the object hits the ground, its rebound velocity and new estimated height it calculated.
+- This happens three times to take an average of your system's performance with basic and linear algebra in a 2D plane.
+#### Stage 2 Breakdown
 - Stage 2 simulates simple trigonometric calculations in quick succession and vector maths.
-- Stage 3 calculates floating point performance for the single core through lots of demanding vector calculations.
+- This time, an arrow is simulated being shot off of a cliff 5,000 metres tall.
+- The angle of the tip of the arrow relative to the horizontal plane is calculated, as well as the resultant velocity.
+- This happens three times to take an average of your system's performance with basic trigonometry and vector maths.
+#### Stage 3 Breakdown
+- Stage 3 calculates floating point performance for the single core through lots of demanding matrix calculations.
+- 2 1024x1024 matrices are generated and 1s and 0s are randomly assigned to each position in the matrices.
+- They are then multiplied together.
+- This is done 10,000 times to take an average of your system's performance with floating point and matrix operations, simulating performance in a complex 3D environment.
+Floating point operations per second are calculated by the formula:<br>
+```py
+FLOPs = (2 * N**3) / ((T)/I)
+```
+In which N is the square length of the matrix, T is the total time taken, and I is the number of times the dot product of the two matrices is calculated over the time period T. 
 
 #### Version 1.2.1 /avale
 - Prettified single core text layout and colours.
