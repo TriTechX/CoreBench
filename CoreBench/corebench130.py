@@ -13,6 +13,7 @@ import subprocess
 import re
 import getpass
 import csv
+import sys
 #Third-party packages
 import cpuinfo
 import psutil
@@ -44,12 +45,8 @@ except FileExistsError:
     os.chdir(homedir)
 
 def clear():
-
-    name = str(os.name)
-    if name in ["nt","dos"]:
-        os.system("cls")
-    else:
-        os.system("clear")
+    sys.stdout.write("\033c") 
+    sys.stdout.flush()
 
 clear()
 
@@ -108,7 +105,7 @@ if str(os.name).lower() in ["nt", "dos", "windows"]:
 else:
     def checkRoot():
         return os.getuid() == 0
-if checkRoot:
+if checkRoot():
     pass
 else:
     print(colours.red() + "This script needs to be run as administrator, bugs may occur." + colours.reset())
@@ -135,8 +132,9 @@ def getData():
             CPUs = psutil.cpu_count(logical=False)
             Threads = os.cpu_count()
             threadsPerCore= int(os.cpu_count())/int(CPUs)
-            memRaw = round(((psutil.virtual_memory().total)/(1e+6)))
-            memory = round(((psutil.virtual_memory().total)/(1e+9)),2)
+            memRaw = round(((psutil.virtual_memory().total)/(1024**2)))
+            memory = round(((psutil.virtual_memory().total)/(1024**3)))
+
             user = get_user()
             if osName in ["Linux"]:
                 time.sleep(1)
@@ -175,12 +173,11 @@ def getData():
                     osNamePretty=colours.grey() + osName
                 
         except Exception as e:
-            f=open("log.txt","w")
-            f.write(str(e))
-            f.close()
+            print(f"A fatal error ocurred.\n{e}")
+            quit()
             
         #UPDATE THIS WITH EVERY VERSION
-        version = "1.2.1"
+        version = "1.3.0"
         #UPDATE THIS WITH EVERY VERSION
         
         endLoad = True
@@ -197,14 +194,6 @@ message = messages[random.randint(0,len(messages)-1)]
 #runs the loading screen
 def loadingScreen():
     try:
-    
-        def clear():
-            
-            name = str(os.name)
-            if name in ["nt","dos"]:
-                os.system("cls")
-            else:
-                os.system("clear")
         
         global endLoad
         clear()
@@ -266,9 +255,8 @@ def loadingScreen():
             time.sleep(0.3)
             clear()
     except Exception as e:
-        f=open("log.txt","a")
-        f.write(e)
-        f.close()
+        print(f"A fatal error ocurred.\n{e}")
+        quit()
 
 if __name__ == "__main__":
     try:
@@ -333,15 +321,6 @@ if len(GPUs)>0:
 else:
     gpuPresent = False
 
-
-#set clear() to clear the screen
-def clear():
-
-    name = str(os.name)
-    if name in ["nt","dos"]:
-        os.system("cls")
-    else:
-        os.system("clear")
 
 N = 1000000
 #intensity of the test, point system will not scale with intensity
@@ -449,18 +428,21 @@ def singleCore(showResults):
 
             if oldPercentageComplete != percentageComplete:
                 clear()
-                print(f"{colours.cyan()}Stage 1{colours.reset()} in progress...")
-                print("[{}{}-sS{}] {}% Done".format(colours.grey(),1,colours.reset(),int(round(percentageComplete))))
+                buffer = []
+
+                buffer.append(f"{colours.cyan()}Stage 1{colours.reset()} in progress...")
+                buffer.append("[{}{}-sS{}] {}% Done".format(colours.grey(),1,colours.reset(),int(round(percentageComplete))))
                 try:
                     timeElapsed = time.perf_counter()-roundStart
-                    print("------")
-                    print("{}Round {} stats{}:".format(colours.green(),ticker+1,colours.reset()))
-                    print("---")
-                    print(f"{colours.magenta()}Velocity{colours.reset()}: {round(-yVel,2)}m/s")
-                    print(f"{colours.magenta()}Distance{colours.reset()}: {round(distanceTravelled,2)}m")
-                    print(f"{colours.magenta()}Time simulated{colours.reset()}: {round(timeSimulated,2)}s")
-                    print("---")
-                    print(f"{colours.magenta()}Time elapsed{colours.reset()}: {int(round(timeElapsed))}s")
+                    buffer.append("------")
+                    buffer.append("{}Round {} stats{}:".format(colours.green(),ticker+1,colours.reset()))
+                    buffer.append("---")
+                    buffer.append(f"{colours.magenta()}Velocity{colours.reset()}: {round(-yVel,2)}m/s")
+                    buffer.append(f"{colours.magenta()}Distance{colours.reset()}: {round(distanceTravelled,2)}m")
+                    buffer.append(f"{colours.magenta()}Time simulated{colours.reset()}: {round(timeSimulated,2)}s")
+                    buffer.append("---")
+                    buffer.append(f"{colours.magenta()}Time elapsed{colours.reset()}: {int(round(timeElapsed))}s")
+                    print("\n".join(buffer))
                 except:
                     pass
 
@@ -545,23 +527,24 @@ def singleCore(showResults):
             percentageComplete = ((math.sqrt(yDistanceTravelled) / math.sqrt(arrowHeight)) * (100 / 3)) + ((100 / 3) * ticker)
 
             if round(oldPercentageComplete) != round(percentageComplete):
-
                 clear()
-                print(f"{colours.cyan()}Stage 2{colours.reset()} in progress...")
-                print("[{}{}-sS{}] {}% Done".format(colours.grey(),2,colours.reset(),int(round(percentageComplete))))
+                buffer = []
+
+                buffer.append(f"{colours.cyan()}Stage 2{colours.reset()} in progress...")
+                buffer.append("[{}{}-sS{}] {}% Done".format(colours.grey(),2,colours.reset(),int(round(percentageComplete))))
                 try:
                     timeElapsed = time.perf_counter()-roundStart
-                    print("------")
-                    print("{}Round {} stats{}:".format(colours.green(),ticker+1,colours.reset()))
-                    print("---")
-                    print(f"{colours.magenta()}Angle{colours.reset()}: {round(angle,2)}°")
-                    print(f"{colours.magenta()}Y velocity{colours.reset()}: {round(-yVel,2)}m/s")
-                    print(f"{colours.magenta()}Distance fallen{colours.reset()}: {round(yDistanceTravelled,2)}m")
-                    print(f"{colours.magenta()}Time simulated{colours.reset()}: {round(timeSimulated,2)}s")
-                    print(f"{colours.magenta()}Resultant velocity{colours.reset()}: {round(resultantVelocity,2)}m/s")
-                    print("---")
-                    print(f"{colours.magenta()}Time elapsed{colours.reset()}: {int(round(timeElapsed))}")
-
+                    buffer.append("------")
+                    buffer.append("{}Round {} stats{}:".format(colours.green(),ticker+1,colours.reset()))
+                    buffer.append("---")
+                    buffer.append(f"{colours.magenta()}Angle{colours.reset()}: {round(angle,2)}°")
+                    buffer.append(f"{colours.magenta()}Y velocity{colours.reset()}: {round(-yVel,2)}m/s")
+                    buffer.append(f"{colours.magenta()}Distance fallen{colours.reset()}: {round(yDistanceTravelled,2)}m")
+                    buffer.append(f"{colours.magenta()}Time simulated{colours.reset()}: {round(timeSimulated,2)}s")
+                    buffer.append(f"{colours.magenta()}Resultant velocity{colours.reset()}: {round(resultantVelocity,2)}m/s")
+                    buffer.append("---")
+                    buffer.append(f"{colours.magenta()}Time elapsed{colours.reset()}: {int(round(timeElapsed))}")
+                    print("\n".join(buffer))
                 except:
                     pass
             
@@ -600,31 +583,73 @@ def singleCore(showResults):
     oldPercentageComplete = -1
     I = 5000
 
-    for x in range(0,I):
-        startTemp = time.perf_counter()
+    for _ in range(3):
+        matC = np.dot(matA,matB) # warmup avoiding CPU frequency scaling issues
+
+    gflopData = []
+    ticker = 0
+
+    for x in range(I):
+        startTemp = time.perf_counter_ns()
         percentageComplete = (x/I)*100
 
         if int(round(oldPercentageComplete)) != int(round(percentageComplete)):
             clear()
-            print(f"{colours.cyan()}Stage 3{colours.reset()} in progress...")
-            print("[{}{}-sS{}] {}% Done".format(colours.grey(),3,colours.reset(),int(round(percentageComplete))))
+            buffer = []
+            buffer.append(f"{colours.cyan()}Stage 3{colours.reset()} in progress...")
+            buffer.append("[{}{}-sS{}] {}% Done".format(colours.grey(),3,colours.reset(),int(round(percentageComplete))))
 
             try:
-                print("------")
-                print(f"{colours.green()}Stats{colours.reset()}:")
-                print("---")
-                print(f"{colours.magenta()}GFLOPs for last run{colours.reset()}: {int(round(flopTemp/1000000000))}")
+                buffer.append("------")
+                buffer.append(f"{colours.green()}Stats{colours.reset()}:")
+                buffer.append("---")
+                buffer.append(f"{colours.magenta()}GFLOPs for last run{colours.reset()}: {round(flopTemp/1000000000,2)}")
+                print("\n".join(buffer))
             except:
                 pass
+
+        
         oldPercentageComplete = percentageComplete
 
         matC = np.dot(matA, matB)  # Matrix multiplication
 
-        endTemp = time.perf_counter()
+        endTemp = time.perf_counter_ns()
 
-        flopTemp = (2 * N**3) / (endTemp - startTemp)
+        flopTemp = (2 * N**3) / (endTemp/1000000000 - startTemp/1000000000)
+        gflopTemp = flopTemp/1000000000
+
+        ticker +=1
+
+        gflopData.append(gflopTemp)
 
     end = time.perf_counter()
+
+    #compute the mean
+    gflopAvg = sum(gflopData)/len(gflopData)
+
+    #calculate the standard deviation from the mean
+    stdDeviationNumerator = 0
+
+    for item in gflopData:
+        value = (item-gflopAvg)**2
+        stdDeviationNumerator += value
+    
+    stdDeviation = math.sqrt(stdDeviationNumerator/len(gflopData))
+
+    #calculate the Z-score for each point
+    gflopNormalised = []
+    discarded = []
+    for item in gflopData:
+        zScore = (item-gflopAvg)/(stdDeviation)
+
+        if zScore < 2 and zScore > -2:
+            gflopNormalised.append(item)
+        else:
+            discarded.append(item)
+            pass # <-- too anomalous, discarded
+
+    gflopAvgNormalised = sum(gflopNormalised)/len(gflopNormalised)
+    percentDiscarded = (len(discarded)/len(gflopData))*100
 
     totalTime = end-start
     avgTime = totalTime/6 #not avg but idgaf
@@ -634,13 +659,25 @@ def singleCore(showResults):
     scoreList.append(score)
 
     flops = (2 * N**3) / ((end - start)/I)
-    gflops = flops/1000000000
+    
+    gflops = gflopAvgNormalised
 
+    cpu_freq = psutil.cpu_freq().current * 1e6
+    flop_per_cycle = (gflops * 1e9) / cpu_freq
+    
+    cpuTypeList = ["AVX", "AVX2", "AVX-512", "SSE"]
+    cpuTypeFlop = [8,16,32,4]
+
+    index = min(range(len(cpuTypeFlop)), key=lambda i: abs(cpuTypeFlop[i] - flop_per_cycle))
+    cpuType = cpuTypeList[index]
+
+    print(f"{colours.cyan()}FLOP per cycle{colours.reset()}: {round(flop_per_cycle,2)}")
+    print(f"{colours.green()}Estimated SIMD Instruction Set{colours.reset()}: {cpuType}")
     print("---")
-    print(f"{colours.magenta()}GFLOPs Performance{colours.reset()}: {gflops}")
+    print(f"{colours.magenta()}GFLOPs Performance{colours.reset()}: {round(gflops,2)}")
     print(f"{colours.green()}Stage 3 complete{colours.reset()}.")
     print("------")
-
+    print(f"{colours.cyan()}Discarded values: {percentDiscarded}%")
     time.sleep(3)
 
     clear()
@@ -651,7 +688,7 @@ def singleCore(showResults):
     if not dynamicMode and not fullTest:
         data = [[score, "", "", ""]]
         filename = "DATA/corebenchdata.csv"
-        with open("DATA/corebenchdata.csv", "a", newline="", encoding="utf-8") as file:
+        with open(filename, "a", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
             writer.writerows(data)
 
@@ -672,48 +709,79 @@ def singleCore(showResults):
 def multiCore(showResults): 
     p = psutil.Process(os.getpid())
     p.cpu_affinity(list(range(os.cpu_count())))
-    #function to create the list
-    def createList(threadNo):
-        global N
 
-        percent = 0
-        oldPercent = 0
-
-        newList = []
-
-        print("[{}{}-sC{}] Building list...".format(colours.grey(), threadNo, colours.reset()))
-
-        for x in range(0,N):
-
-            newList.append(x)
-
-            oldPercent = percent
-
-        return newList
-
-
-    #sqrts every number in the created list
     def intense1(threadNo):
-        global N
-        list = createList(threadNo)
         print("[{}{}-rC{}] Crunching numbers...".format(colours.cyan(), threadNo, colours.reset()))
     
-        for x in range(0,5):
-            for item in list:
-    
-                result = math.sqrt(item)
+        ballHeight = 500
+        
+        GFLUCTUATION = random.randint(-10,10)/10
+        ACCELERATION = 9.81+GFLUCTUATION
+        BOUNCECONSTANT = random.randint(1, 10)
+
+        timeSimulated = 0
+        timeIncrement = 1e-6
+        distanceTravelled = 0
+
+        yVel = 0
+
+
+        timeToHit = math.sqrt(ballHeight/(0.5*ACCELERATION))
+
+        while distanceTravelled < ballHeight:
+
+            yVel = yVel-timeIncrement*ACCELERATION
+            timeSimulated+=timeIncrement
+
+            
+            distanceTravelled = 0.5 * ACCELERATION * timeSimulated**2
+
+        yVel = -yVel - (BOUNCECONSTANT)
+
+        timeList.append(timeSimulated)
+
+        u = yVel
+        a = ACCELERATION
+
+        distanceTravelled = 0
+
+        estimatedHeight =  (u**2)/(2*a)
+
         print("[{}{}-cC{}] Instance complete!".format(colours.green(), threadNo, colours.reset()))
-    #uses division
+    
     def intense2(threadNo):
-        global N, CPUs
-        list = createList(threadNo)
         print("[{}{}-rC{}] Crunching numbers...".format(colours.cyan(), threadNo, colours.reset()))
-    
-        for x in range(0,5):
-            for item in list:
-    
-                result = item/(item+1/(item+1/2))
+
+        arrowHeight = 500
+        
+        GFLUCTUATION = random.randint(-10,10)/10
+        ACCELERATION = 9.81+GFLUCTUATION
+
+        timeSimulated = 0
+        timeIncrement = 1e-6
+
+        yDistanceTravelled = 0
+        xDistanceTravelled = 0
+
+        yVel = 0
+        xVel = 50
+
+        timeToHit = math.sqrt(arrowHeight/(0.5*ACCELERATION))
+
+        while yDistanceTravelled < arrowHeight:
+
+            yVel = yVel - timeIncrement*ACCELERATION
+
+            timeSimulated+=timeIncrement
+            yDistanceTravelled = 0.5 * ACCELERATION * timeSimulated**2
+
+            xDistanceTravelled = xVel*timeSimulated
+
+            angle = -math.atan2(yVel,xVel)*(180/math.pi) #radians to degrees
+            resultantVelocity = math.sqrt(yVel**2+xVel**2) #calculates the resultant velocity
+        
         print("[{}{}-cC{}] Instance complete!".format(colours.green(), threadNo, colours.reset()))
+    
     #checks for dynamic mode
     if dynamicMode == True:
         coreCount = int(CPUs)
@@ -743,12 +811,10 @@ def multiCore(showResults):
                 for i in range(coreCount):
                     if ticker == 0:
                         p = coreContext.Process(target=intense1, args=(i+1,))
-                        tecker = 1
+                        ticker = 1
                     elif ticker == 1:
                         p = coreContext.Process(target=intense2, args=(i+1,))
                         ticker = 0
-                    if tecker == 1:
-                        ticker = 1
     
                     processes.append(p)
                     p.start()
@@ -772,13 +838,13 @@ def multiCore(showResults):
         totalTime+=item
 
     avgTime = totalTime/3
-    score = round((1/avgTime)*(math.e)*(1000*(1/math.log(coreCount+4,10))))
+    score = round((1/(avgTime/(math.e/2))*(math.e)*(1000*(1/math.log(coreCount+4,10)))))
     clear()
 
     if not dynamicMode and not fullTest:
         data = [["", score, "", ""]]
         filename = "DATA/corebenchdata.csv"
-        with open("DATA/corebenchdata.csv", "a", newline="", encoding="utf-8") as file:
+        with open(filename, "a", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
             writer.writerows(data)
         
@@ -796,59 +862,84 @@ def multiCore(showResults):
 
 #multithreading test, with the same basic algorithms as the multicore test
 def multiThread(showResults):
+
     p = psutil.Process(os.getpid())
     p.cpu_affinity(list(range(os.cpu_count())))
-    
-    def createList(threadNo):
-        global N
-
-        percent = 0
-        oldPercent = 0
-
-        newList = []
-
-        print("[{}{}-sT{}]Building list...".format(colours.grey(), threadNo, colours.reset()))
-
-        for x in range(0,N):
-
-            newList.append(x)
-
-            oldPercent = percent
-
-        return newList
 
 
-    #sqrts every number in the created list
     def intense1(threadNo):
-
-        global N
-
-        list = createList(threadNo)
-
         print("[{}{}-rT{}] Crunching numbers...".format(colours.magenta(), threadNo, colours.reset()))
-
-        for x in range(0,5):
-            for item in list:
     
-                result = math.sqrt(item)
-
-        print("[{}{}-cT{}] Instance complete!".format(colours.green(), threadNo, colours.reset()))
-
-    def intense2(threadNo):
-
-        global N
-
-        list = createList(threadNo)
-
-        print("[{}{}-rT{}] Crunching numbers...".format(colours.magenta(), threadNo, colours.reset()))
-
-        for x in range(0,5):
-            for item in list:
-    
-                result = item/(item+1/(item+1/2))
-
-        print("[{}{}-cT{}] Instance complete!".format(colours.green(), threadNo, colours.reset()))
+        ballHeight = 250
         
+        GFLUCTUATION = random.randint(-10,10)/10
+        ACCELERATION = 9.81+GFLUCTUATION
+        BOUNCECONSTANT = random.randint(1, 10)
+
+        timeSimulated = 0
+        timeIncrement = 1e-6
+        distanceTravelled = 0
+
+        yVel = 0
+
+
+        timeToHit = math.sqrt(ballHeight/(0.5*ACCELERATION))
+
+        while distanceTravelled < ballHeight:
+
+            yVel = yVel-timeIncrement*ACCELERATION
+            timeSimulated+=timeIncrement
+
+            
+            distanceTravelled = 0.5 * ACCELERATION * timeSimulated**2
+
+        yVel = -yVel - (BOUNCECONSTANT)
+
+        timeList.append(timeSimulated)
+
+        u = yVel
+        a = ACCELERATION
+
+        distanceTravelled = 0
+
+        estimatedHeight =  (u**2)/(2*a)
+
+        print("[{}{}-cT{}] Instance complete!".format(colours.green(), threadNo, colours.reset()))
+
+    
+    def intense2(threadNo):
+        print("[{}{}-rT{}] Crunching numbers...".format(colours.magenta(), threadNo, colours.reset()))
+
+        arrowHeight = 250
+        
+        GFLUCTUATION = random.randint(-10,10)/10
+        ACCELERATION = 9.81+GFLUCTUATION
+
+        timeSimulated = 0
+        timeIncrement = 1e-6
+
+        yDistanceTravelled = 0
+        xDistanceTravelled = 0
+
+        yVel = 0
+        xVel = 50
+
+        timeToHit = math.sqrt(arrowHeight/(0.5*ACCELERATION))
+
+        while yDistanceTravelled < arrowHeight:
+
+            yVel = yVel - timeIncrement*ACCELERATION
+
+            timeSimulated+=timeIncrement
+            yDistanceTravelled = 0.5 * ACCELERATION * timeSimulated**2
+
+            xDistanceTravelled = xVel*timeSimulated
+
+            angle = -math.atan2(yVel,xVel)*(180/math.pi) #radians to degrees
+            resultantVelocity = math.sqrt(yVel**2+xVel**2) #calculates the resultant velocity
+        
+        print("[{}{}-cT{}] Instance complete!".format(colours.green(), threadNo, colours.reset()))
+
     if __name__ == "__main__": 
         if dynamicMode == True:
             threadCount = Threads
@@ -870,12 +961,10 @@ def multiThread(showResults):
             for i in range(threadCount):
                 if ticker == 0:
                     t = threading.Thread(target=intense1, args=(i+1,))
-                    tecker = 1
+                    ticker = 1
                 elif ticker == 1:
                     t = threading.Thread(target=intense2, args=(i+1,))
                     ticker = 0
-                if tecker == 1:
-                    ticker = 1
 
                 threads.append(t)
                 t.start()
@@ -906,13 +995,13 @@ def multiThread(showResults):
 
         avgTime = totalTime/3
 
-        score = round((1/avgTime)*(math.e)*(2000*(1/math.log(threadCount+8,10))))
+        score = round((1/(avgTime/(math.e/1.3))*(math.e)*(2000*(1/math.log(threadCount-2,10)))))
         clear()
 
         if not dynamicMode and not fullTest:
             data = [["", "", score, ""]]
             filename = "DATA/corebenchdata.csv"
-            with open("DATA/corebenchdata.csv", "a", newline="", encoding="utf-8") as file:
+            with open(filename, "a", newline="", encoding="utf-8") as file:
                 writer = csv.writer(file)
                 writer.writerows(data)
                 
@@ -932,29 +1021,22 @@ def fullCPUTest():
     global fullTest, brandName, version
 
     fullTest = True
-    def clear():
-
-        name = str(os.name)
-        if name in ["nt","dos"]:
-            os.system("cls")
-        else:
-            os.system("clear")
 
     def coolDown(points):
-        os.system("clear")
+        clear()
         print(f"Allowing {colours.green()}time{colours.reset()} for {colours.cyan()}cooldown{colours.reset()}...")
         time.sleep(5)
-        os.system("clear")
+        clear()
         print(f"Your system scored {colours.magenta()}{points}{colours.reset()} points on the {colours.red()}most recent test{colours.red()}.")
         time.sleep(5)
-        os.system("clear")
+        clear()
         for x in range(0,3):
             if 3-x != 1:
                 print(f"{colours.magenta()}{3-x}{colours.reset()} seconds...")
             else:
                 print(f"{colours.magenta()}{3-x}{colours.reset()} second...")
             time.sleep(1)
-            os.system("clear")
+            clear()
         
     singleCoreScore = singleCore(False)
     coolDown(singleCoreScore)
@@ -970,7 +1052,7 @@ def fullCPUTest():
     if not dynamicMode:
         data = [[singleCoreScore, multiCoreScore, multiThreadScore, finalScore]]
         filename = "DATA/corebenchdata.csv"
-        with open("DATA/corebenchdata.csv", "a", newline="", encoding="utf-8") as file:
+        with open(filename, "a", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
             writer.writerows(data)
     
@@ -1214,7 +1296,11 @@ while True:
 
         else:
             valid = False
-            print(f"{colours.red()}Invalid command{colours.reset()}")
+            if choice.strip(" ") != "":
+                print(f"{colours.red()}Invalid command{colours.reset()}")
+            else:
+                clear()
+                print(f"Please enter the {colours.magenta()}test command{colours.reset()}.")
             #Invalid base
 
     base = choice
