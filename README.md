@@ -159,29 +159,24 @@ Add "-d" to the end of your command to run the test in dynamic mode. The [CTRL] 
 
 #### Version 1.2.0 /xytro & avale
 - Completely reworks the single core algorithms.
-#### Stage 1 Breakdown
-- Stage 1 initiates an object for falling by preparing values such as the strength of gravity and the fluctuation in gravitational field strength.
-- The object is then dropped from a height of 5,000 metres, and all necessary properties of the object are calculated to the precision of 1 microsecond until the object hits the ground.
-- Once the object hits the ground, its rebound velocity and new estimated height it calculated.
-- This happens three times to take an average of your system's performance with basic and linear algebra in a 2D plane.
-#### Stage 2 Breakdown
+- Stage 1 is now a gravity and collision detection simulator.
 - Stage 2 simulates simple trigonometric calculations in quick succession and vector maths.
-- This time, an arrow is simulated being shot off of a cliff 5,000 metres tall.
-- The angle of the tip of the arrow relative to the horizontal plane is calculated, as well as the resultant velocity.
-- This happens three times to take an average of your system's performance with basic trigonometry and vector maths.
-#### Stage 3 Breakdown
-- Stage 3 calculates floating point performance for the single core through lots of demanding matrix calculations.
-- 2 1024x1024 matrices are generated and 1s and 0s are randomly assigned to each position in the matrices.
-- They are then multiplied together.
-- This is done 10,000 times to take an average of your system's performance with floating point and matrix operations, simulating performance in a complex 3D environment.
-Floating point operations per second are calculated by the formula:<br>
-```py
-FLOPs = (2 * N**3) / ((T)/I)
-```
-In which N is the square length of the matrix, T is the total time taken, and I is the number of times the dot product of the two matrices is calculated over the time period T. 
+- Stage 3 calculates floating point performance for the single core through lots of demanding vector calculations.
 
 #### Version 1.2.1 /avale
 - Prettified single core text layout and colours.
 - Sorted out code order issues.
 - Added credits to readme.
 - Fixed title header layout on readme.
+
+#### Version 1.3.0 /xytro & /avale (sorta)
+- Fixed a bug when the algorithms in multicore and multithread would not be evenly spread out, the first algorithm would run once, and the second for the remaining number of cores/threads.
+- Changed the multicore and multithread algorithms to be nerfed versions of the single core algorithm. The algorithms used in versions 1.1.1 and below are no longer present.
+- Issues with this version: scores are not balanced. Version 2.0.0 will be released once scores are fully balanced.
+- Thread algorithms have half the intensity of multicore algorithms, and multicore algorithms have a tenth of the intensity of single core algorithms.
+- Fixed I/O bottlenecks by using a buffer and printing a list instead of multiple strings in single core.
+- Removed a little bit of boilerplate code.
+- On average after these optimisations CPUs will score 5% higher.
+- GFLOP performance of your CPU is now calculated differently, using the standard deviation of each datapoint from the mean and calculation of Z-score to deliver a more precise value.
+- GFLOP performance is now delivered to 2 decimal places.
+- Fixed RAM calculation to not show 2 decimal places, and show quantity of physicall RAM installed in your system as advertised.
