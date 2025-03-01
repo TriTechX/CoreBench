@@ -190,3 +190,10 @@ Add "-d" to the end of your command to run the test in dynamic mode. The [CTRL] 
 - Added new commands "quit", "exit", "clear"
 - You can now add "*x" before your command (e.g. ```*2 sc```) to run your test ```x``` number of times.
 - Various stability fixes and improvements.
+
+#### Version 1.3.3 /xytro
+- Shows the graph in default image viewer once the full CPU test is complete.
+- Removed AVX-512 estimation.
+- Added a runner file that creates the CoreBench environment for ideal circumstances on startup.
+- To use, just ```chmod +x corebench.sh``` and ```./corebench.sh```.
+- Readjusted multicore score calculation to be more balanced. The score is almost at a point that I can call it balanced.
