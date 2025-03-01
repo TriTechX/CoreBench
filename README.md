@@ -184,3 +184,9 @@ Add "-d" to the end of your command to run the test in dynamic mode. The [CTRL] 
 #### Version 1.3.1 /xytro
 - Fixed RAM showing incorrectly.
 - Fixed clock speeds showing incredibly high numbers.
+
+#### Version 1.3.2 /xytro
+- Allowed CTRL+C to be used to cancel an ongoing test
+- Added new commands "quit", "exit", "clear"
+- You can now add "*x" before your command (e.g. ```*2 sc```) to run your test ```x``` number of times.
+- Various stability fixes and improvements.
