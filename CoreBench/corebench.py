@@ -33,7 +33,6 @@ homedir = os.getcwd()
 # if you can find a way to optimise the loading times that would be good
 # i know it says GPU test in the notes, please do not make the GPU test because it requires pyCUDA and other cuda stuff that is beyond the storage limit for this account, I'll do it when I move to a collab or something idk
 
-
 try:
     os.mkdir("DATA")
     os.chdir(homedir)
@@ -43,6 +42,7 @@ except PermissionError:
 except FileExistsError:
     pass
     os.chdir(homedir)
+
 
 def clear():
     sys.stdout.write("\033c") 
@@ -124,16 +124,23 @@ def getData():
             osName = platform.system()
             architecture = platform.machine()
             brandName = cpuinfo.get_cpu_info()["brand_raw"]
-            clockSpeed = cpuinfo.get_cpu_info()["hz_advertised_friendly"]
-            clockList = clockSpeed.split(" ")
-            clockSpeed = float(clockList[0])
-            clockSpeed = round(clockSpeed,2)
-            clockSpeed = str(clockSpeed) + " GHz"
+            
+            def get_advertised_cpu_clock():
+                try:
+                    output = subprocess.check_output("lscpu", shell=True, text=True)
+                    for line in output.split("\n"):
+                        if "CPU max MHz" in line:  # Find the max advertised MHz
+                            max_mhz = float(line.split(":")[1].strip().split()[0])  # Extract and convert to float
+                            return f"{max_mhz/1000:.2f} GHz"  # Convert MHz to GHz and round to 2 decimal places
+                except Exception as e:
+                    return str(e)
+            
+            clockSpeed = get_advertised_cpu_clock()
             CPUs = psutil.cpu_count(logical=False)
             Threads = os.cpu_count()
             threadsPerCore= int(os.cpu_count())/int(CPUs)
             memRaw = round(((psutil.virtual_memory().total)/(1024**2)))
-            memory = round(((psutil.virtual_memory().total)/(1024**3)))
+            memory = math.ceil(((psutil.virtual_memory().total)/(1024**3)))
 
             user = get_user()
             if osName in ["Linux"]:
@@ -177,7 +184,7 @@ def getData():
             quit()
             
         #UPDATE THIS WITH EVERY VERSION
-        version = "1.3.0"
+        version = "1.3.1"
         #UPDATE THIS WITH EVERY VERSION
         
         endLoad = True
@@ -287,8 +294,7 @@ def prettyPrintData():
     print("------")
 
     print(f"{colours.magenta()}OS Name{colours.reset()}: {osNamePretty}")
-        
-    
+
     print(f"{colours.cyan()}Architecture{colours.reset()}: {architecture}")
     
     
@@ -314,7 +320,8 @@ def prettyPrintData():
     for gpu in GPUs:
         print(f"{colours.cyan()}GPU Name{colours.reset()}: {gpu.name}")
         print(f"{colours.magenta()}VRAM{colours.reset()}: {gpu.memoryTotal} MB")
-
+    if GPUs:
+        print("------")
 
 if len(GPUs)>0:
     gpuPresent = True
