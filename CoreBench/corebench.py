@@ -14,6 +14,7 @@ import re
 import getpass
 import csv
 import sys
+import shutil
 #Third-party packages
 import cpuinfo
 import psutil
@@ -105,11 +106,13 @@ if str(os.name).lower() in ["nt", "dos", "windows"]:
 else:
     def checkRoot():
         return os.getuid() == 0
+
 if checkRoot():
     pass
 else:
-    print(colours.red() + "This script needs to be run as administrator, bugs may occur." + colours.reset())
-    temp = input(colours.grey() + "Press [ENTER] to continue..." + colours.reset())
+    pass
+    # print(colours.red() + "This script needs to be run as administrator, bugs may occur." + colours.reset())
+    # temp = input(colours.grey() + "Press [ENTER] to continue..." + colours.reset())
     
 
 #Get system information, runs during the main load
@@ -712,7 +715,7 @@ def singleCore(showResults):
     return score
 
 
-#Multicore test
+#Multicore testos.remove("c
 def multiCore(showResults): 
     p = psutil.Process(os.getpid())
     p.cpu_affinity(list(range(os.cpu_count())))
@@ -845,7 +848,7 @@ def multiCore(showResults):
         totalTime+=item
 
     avgTime = totalTime/3
-    score = round((1/(avgTime/(math.e/2))*(math.e)*(1000*(1/math.log(coreCount+4,10)))))
+    score = round((1/(avgTime/(math.e))*(math.e)*(1000*(1/math.log(coreCount+4,10)))))
     clear()
 
     if not dynamicMode and not fullTest:
@@ -1002,7 +1005,7 @@ def multiThread(showResults):
 
         avgTime = totalTime/3
 
-        score = round((1/(avgTime/(math.e/1.3))*(math.e)*(2000*(1/math.log(threadCount-2,10)))))
+        score = round((1/(avgTime/(math.e/1.3))*(math.e)*(2000*(1/math.log(threadCount-2,10))))*10)
         clear()
 
         if not dynamicMode and not fullTest:
@@ -1239,13 +1242,13 @@ while True:
     p = psutil.Process(os.getpid())
     p.cpu_affinity(list(range(os.cpu_count())))
     
-    temp = input(colours.grey()+"Press [ENTER] to continue..."+colours.reset())
+    temp = input(colours.grey() + "Press [ENTER] to continue..." + colours.reset())
     
     clear()
     
     time.sleep(0.1)
     
-    #Main program
+    # Main program
     '''
     sc - single core
     st - single core
@@ -1255,9 +1258,11 @@ while True:
     n - internet speed
     '''
     validChoice = ["sc", "st", "mc", "mt", "nic", "n", "fullc", "fc"]
+    otherChoice = ["exit", "quit", "clear"]
     validArgs = ["d"]
     valid = False
     print(f"Please enter the {colours.magenta()}test command{colours.reset()}.")
+    
     while not valid:
         args = None
         multiArgs = False
@@ -1265,76 +1270,120 @@ while True:
         
         choice = input("=> ")
         choice = choice.lower().strip(" ")
-        try:
-            #Checks to see if it contains args
-            try:
-                choice, args = choice.split(" -")
-            except:
-                choice, args = choice.split("-")
-                
-            multiArgs = True
-            if choice in validChoice:
-                skip = False
-            else:
-                skip = True
-        except:
-            #Has no args, gets sent here
-            #If the choice is valid, it goes through the next validation process     
-            if choice in validChoice:
-                valid = True
-                skip = False
-            else:
-                valid = False
-                skip = True
-        
-        if not skip:
-            if not multiArgs:
-                dynamicMode = False
-                valid = True
-                #Checks for correct base but no args
-            elif args == "d":
-                dynamicMode = True
-                valid = True
-                #Dynamic mode
-            else:
-                dynamicMode = False
-                valid = False
-                #No valid arguments
 
+        # Handle case for *x syntax
+        if "*" in choice:
+            num_part = choice.split(" ")[0]
+            num = int(num_part.strip("*"))
+            choice = choice[len(num_part):].strip()  # Remove the *x part
         else:
-            valid = False
-            if choice.strip(" ") != "":
-                print(f"{colours.red()}Invalid command{colours.reset()}")
-            else:
-                clear()
-                print(f"Please enter the {colours.magenta()}test command{colours.reset()}.")
-            #Invalid base
+            num = 1  # Default to 1 if no *x syntax is used
 
-    base = choice
-    
-    if base in ["sc", "st"]:
-        index = 0
-    elif base == "mc":
-        index = 1
-    elif base == "mt":
-        index = 2
-    elif base in ["fullc", "fc"]:
-        index = 3
-    elif base in ["n", "nic"]:
-        index = 4
+        if choice in otherChoice:
+            if choice == "exit" or choice == "quit":
+                quit()
+            elif choice == "clear":
+                print(f"Are you sure you want to {colours.red()}clear ALL data{colours.reset()}? (y/n)")
+                confirm = input("=> ")
+
+                if confirm.lower() == "y":
+                    os.chdir(homedir)
+                    shutil.rmtree("DATA")
+                    os.mkdir("DATA")
+
+                    filename = "DATA/corebenchdata.csv"
+                    f = open(filename, "w")
+                    headers = [["single", "mcore", "mthread", "full"]]
+
+                    with open("DATA/corebenchdata.csv", "a", newline="", encoding="utf-8") as file:
+                        writer = csv.writer(file)
+                        writer.writerows(headers)
+
+                    print(f"{colours.green()}Data cleared{colours.reset()}.")
+                else:
+                    print(f"{colours.red()}Data not cleared{colours.reset()}.")
+        else:
+            try:
+                # Checks to see if it contains args
+                try:
+                    choice, args = choice.split(" -")
+                except:
+                    choice, args = choice.split("-")
+                    
+                multiArgs = True
+                if choice in validChoice:
+                    skip = False
+                else:
+                    skip = True
+            except:
+                # Has no args, gets sent here
+                # If the choice is valid, it goes through the next validation process     
+                if choice in validChoice:
+                    valid = True
+                    skip = False
+                else:
+                    valid = False
+                    skip = True
+            
+            if not skip:
+                if not multiArgs:
+                    dynamicMode = False
+                    valid = True
+                    # Checks for correct base but no args
+                elif args == "d":
+                    dynamicMode = True
+                    valid = True
+                    # Dynamic mode
+                else:
+                    dynamicMode = False
+                    valid = False
+                    # No valid arguments
+
+            else:
+                valid = False
+                if choice.strip(" ") != "":
+                    print(f"{colours.red()}Invalid command{colours.reset()}")
+                else:
+                    clear()
+                    print(f"Please enter the {colours.magenta()}test command{colours.reset()}.")
+                # Invalid base
+
+        base = choice
+        index = -1  # Initialize index with a default value
         
-    if index == 0:
-        singleCore(True)
-        prettyPrintData()
-    elif index == 1:
-        multiCore(True)
-        prettyPrintData()
-    elif index == 2:
-        multiThread(True)
-        prettyPrintData()
-    elif index == 3:
-        fullCPUTest()
-        prettyPrintData()
-    elif index == 4:
-        test_speed()
-        prettyPrintData()
+        if base in ["sc", "st"]:
+            index = 0
+        elif base == "mc":
+            index = 1
+        elif base == "mt":
+            index = 2
+        elif base in ["fullc", "fc"]:
+            index = 3
+        elif base in ["n", "nic"]:
+            index = 4
+        
+        try:
+            if index == 0:
+                for x in range(num):
+                    singleCore(x == num - 1)
+                prettyPrintData()
+            elif index == 1:
+                for x in range(num):
+                    multiCore(x == num - 1)
+                prettyPrintData()
+            elif index == 2:
+                for x in range(num):
+                    multiThread(x == num - 1)
+                prettyPrintData()
+            elif index == 3:
+                for x in range(num):
+                    fullCPUTest()
+                prettyPrintData()
+            elif index == 4:
+                for x in range(num):
+                    test_speed()
+                prettyPrintData()
+            else:
+                print(f"{colours.red()}Invalid command{colours.reset()}")
+        except KeyboardInterrupt:
+            print(f"{colours.red()}Test cancelled{colours.reset()}.")
