@@ -187,7 +187,7 @@ def getData():
             quit()
             
         #UPDATE THIS WITH EVERY VERSION
-        version = "1.3.2"
+        version = "1.3.3"
         #UPDATE THIS WITH EVERY VERSION
         
         endLoad = True
@@ -675,8 +675,8 @@ def singleCore(showResults):
     cpu_freq = psutil.cpu_freq().current * 1e6
     flop_per_cycle = (gflops * 1e9) / cpu_freq
     
-    cpuTypeList = ["AVX", "AVX2", "AVX-512", "SSE"]
-    cpuTypeFlop = [8,16,32,4]
+    cpuTypeList = ["AVX", "AVX2", "SSE"]
+    cpuTypeFlop = [8,16,4]
 
     index = min(range(len(cpuTypeFlop)), key=lambda i: abs(cpuTypeFlop[i] - flop_per_cycle))
     cpuType = cpuTypeList[index]
@@ -848,7 +848,7 @@ def multiCore(showResults):
         totalTime+=item
 
     avgTime = totalTime/3
-    score = round((1/(avgTime/(math.e))*(math.e)*(1000*(1/math.log(coreCount+4,10)))))
+    score = round((1/(avgTime/(math.e/1.5))*(math.e)*(1000*(1/math.log(coreCount+4,10)))))
     clear()
 
     if not dynamicMode and not fullTest:
@@ -1152,6 +1152,7 @@ def fullCPUTest():
     else:
         plt.savefig("DATA/corebenchdata_{}.png".format(prettyDateUnderscore))
 
+    subprocess.run(['xdg-open', "DATA/corebenchdata_{}.png".format(prettyDateUnderscore)])
 
 def test_speed():
     try:
