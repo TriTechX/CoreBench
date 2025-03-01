@@ -180,7 +180,7 @@ Add "-d" to the end of your command to run the test in dynamic mode. The [CTRL] 
 - GFLOP performance of your CPU is now calculated differently, using the standard deviation of each datapoint from the mean and calculation of Z-score to deliver a more precise value.
 - GFLOP performance is now delivered to 2 decimal places.
 - Fixed RAM calculation to not show 2 decimal places, and show quantity of physicall RAM installed in your system as advertised.
-- 
+
 #### Version 1.3.1 /xytro
 - Fixed RAM showing incorrectly.
 - Fixed clock speeds showing incredibly high numbers.
