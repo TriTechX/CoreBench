@@ -4,4 +4,4 @@
   "python_version":"3.12",
   "requirements":"CoreBench/requirements.txt",
   "linuxrequirements":["neofetch"],
-  "main":"CoreBench/corebench.py"}
+  "main":"CoreBench/corebench.sh"}
