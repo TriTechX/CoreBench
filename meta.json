@@ -1,7 +1,7 @@
 {"repo_name":"corebench",
   "package_name":"cb",
   "version":"1.3.3",
-  "python_version":"3.12",
+  "python":"true",
   "requirements":"corebench/requirements.txt",
   "linuxrequirements":["neofetch"],
   "main":"corebench/corebench.sh"}
