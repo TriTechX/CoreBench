@@ -1,0 +1,6 @@
+{"repo_name":"CoreBench",
+  "package_name":"corebench",
+  "version":"1.3.3",
+  "python_version":"3.12",
+  "requirements":"CoreBench/requirements.txt",
+  "main":"CoreBench/corebench.py"}
