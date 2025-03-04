@@ -2,6 +2,6 @@
   "package_name":"corebench",
   "version":"1.3.3",
   "python_version":"3.12",
-  "pyrequirements":"CoreBench/requirements.txt",
-  "linuxrequirements":"CoreBench/linuxrequirements.txt",
+  "requirements":"CoreBench/requirements.txt",
+  "linuxrequirements":["neofetch"],
   "main":"CoreBench/corebench.py"}
