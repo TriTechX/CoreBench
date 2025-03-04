@@ -1,7 +1,7 @@
-{"repo_name":"CoreBench",
+{"repo_name":"corebench",
   "package_name":"corebench",
   "version":"1.3.3",
   "python_version":"3.12",
-  "requirements":"CoreBench/requirements.txt",
+  "requirements":"corebench/requirements.txt",
   "linuxrequirements":["neofetch"],
-  "main":"CoreBench/corebench.sh"}
+  "main":"corebench/corebench.sh"}
