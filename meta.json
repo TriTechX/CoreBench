@@ -1,5 +1,5 @@
 {"repo_name":"corebench",
-  "package_name":"cb",
+  "package_name":"corebench",
   "version":"1.3.3",
   "python":"true",
   "requirements":"corebench/requirements.txt",
