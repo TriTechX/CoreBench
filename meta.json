@@ -3,5 +3,5 @@
   "version":"1.3.3",
   "python":"true",
   "requirements":"corebench/requirements.txt",
-  "linuxrequirements":["neofetch"],
+  "linuxrequirements":["neofetch", "xdg-utils"],
   "main":"corebench/corebench.sh"}
