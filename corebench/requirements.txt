@@ -6,3 +6,4 @@ speedtest-cli
 matplotlib
 numpy
 distro
+mysql-connector-python
