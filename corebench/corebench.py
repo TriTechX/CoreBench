@@ -15,6 +15,8 @@ import getpass
 import csv
 import sys
 import shutil
+import requests
+import hashlib
 #Third-party packages
 import cpuinfo
 import psutil
@@ -26,10 +28,56 @@ import matplotlib.pyplot as plt
 import numpy as np
 #Custom packages
 import colours
+
 #package functions
 mpl.use("Agg")
+
 homedir = os.getcwd()
 
+#attempt to initialise database
+
+def get_file_hash():
+    sha256 = hashlib.sha256()
+    filename = os.path.abspath(__file__)
+
+    with open(filename, 'rb') as f:
+        for chunk in iter(lambda: f.read(4096), b''):
+            sha256.update(chunk)
+
+    return sha256.hexdigest()
+
+def sendForAuth(cpu_name, core_count, thread_count, ram, single, mcore, mthread, gflops, full, os_name, version):
+    """Temporary measure. This is very insecure."""
+    server_ip = "http://87.106.100.187:6407/submit"
+
+    key = "abc"
+
+    data = {
+        "api_key":key,
+        
+        "payload":
+        {
+            "cpu_name": cpu_name,
+            "core_count":core_count,
+            "thread_count":thread_count,
+            "ram":ram,
+            "single_core": single,
+            "multi_core": mcore,
+            "multi_thread": mthread,
+            "gflops": gflops,
+            "overall_score": full,
+            "os_name": os_name,
+            "version": version
+        },
+
+        "timestamp": time.time(),
+
+        "signature":get_file_hash()
+    }
+
+    response = requests.post(server_ip, json=data)    
+
+    #send
 # s'il vous plaît exterminer la vermine mercy bookoooooooo
 # if you can find a way to optimise the loading times that would be good
 # i know it says GPU test in the notes, please do not make the GPU test because it requires pyCUDA and other cuda stuff that is beyond the storage limit for this account, I'll do it when I move to a collab or something idk
@@ -187,7 +235,7 @@ def getData():
             quit()
             
         #UPDATE THIS WITH EVERY VERSION
-        version = "1.3.3"
+        version = "1.4.0"
         #UPDATE THIS WITH EVERY VERSION
         
         endLoad = True
@@ -712,7 +760,7 @@ def singleCore(showResults):
         print("---")
         print(f"{colours.green()}Floating point operations performance{colours.reset()}: {round(gflops,2)} GFLOPs")
     
-    return score
+    return score, gflops
 
 
 #Multicore testos.remove("c
@@ -1028,7 +1076,7 @@ def multiThread(showResults):
 
 
 def fullCPUTest():
-    global fullTest, brandName, version
+    global fullTest, brandName, version, distroName, CPUs, Threads
 
     fullTest = True
 
@@ -1048,7 +1096,7 @@ def fullCPUTest():
             time.sleep(1)
             clear()
         
-    singleCoreScore = singleCore(False)
+    singleCoreScore, gflops = singleCore(False)
     coolDown(singleCoreScore)
     multiCoreScore = multiCore(False)
     coolDown(multiCoreScore)
@@ -1084,6 +1132,7 @@ def fullCPUTest():
             else:
                 f.write(f"\n\n{prettyDate} Results:\n------\nSingle Core: {singleCoreScore}\nMulti Core: {multiCoreScore}\nMulti Thread: {multiThreadScore}\nAverage Score: {finalScore}\n^^^ DYNAMIC MODE SCORE ^^^")
             f.flush()
+
     except Exception as e:
         print(f"{colours.red()}Error writing to file:{colours.reset()} {e}")
 
@@ -1152,7 +1201,14 @@ def fullCPUTest():
     else:
         plt.savefig("DATA/corebenchdata_{}.png".format(prettyDateUnderscore))
 
-    subprocess.run(['xdg-open', "DATA/corebenchdata_{}.png".format(prettyDateUnderscore)])
+    try:
+        subprocess.run(['xdg-open', "DATA/corebenchdata_{}.png".format(prettyDateUnderscore)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except:
+        pass
+
+    ##Now we attempt to connect to the database
+    if not dynamicMode:
+        sendForAuth(brandName, CPUs, Threads, memRaw, singleCoreScore, multiCoreScore, multiThreadScore, gflops, finalScore, distroName, version)
 
 def test_speed():
     try:
@@ -1239,6 +1295,13 @@ else:
 
 
 while True:
+    #Logic for sending to SQL Database
+    #If not dynamicMode
+    #Then connect to database
+    #Upload CPU name, CPU single core speed, CPU multi core speed, CPU multi thread speed, full test result
+    #e.g. Intel(R) i5-12400F 12th generation processor, 1000, 1000, 1000, 1000
+    #On frontend website, the database is rapidly scanned, and averages are calculated to give an average score for said CPU
+
     fullTest = False
     p = psutil.Process(os.getpid())
     p.cpu_affinity(list(range(os.cpu_count())))
