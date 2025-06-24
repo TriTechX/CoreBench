@@ -6,3 +6,4 @@ speedtest-cli
 matplotlib
 numpy
 distro
+requests
