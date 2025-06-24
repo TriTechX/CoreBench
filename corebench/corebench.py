@@ -26,6 +26,7 @@ import speedtest
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+
 #Custom packages
 import colours
 
@@ -34,7 +35,27 @@ mpl.use("Agg")
 
 homedir = os.getcwd()
 
-#attempt to initialise database
+def is_connected():
+    try:
+        response = requests.get("https://www.google.com", timeout=5)
+        if response.status_code == 200:
+            return True
+        
+    except requests.ConnectionError:
+        return False
+
+def return_api_key():
+    if os.path.exists("apikey.txt"):
+        with open("apikey.txt", "r") as f:
+            key = f.read().strip()
+        return key
+    else:
+        key = None
+        return key
+
+def write_api_key(key):
+    with open("apikey.txt", "w") as f:
+        f.write(key)
 
 def get_file_hash():
     sha256 = hashlib.sha256()
@@ -46,15 +67,15 @@ def get_file_hash():
 
     return sha256.hexdigest()
 
-def sendForAuth(cpu_name, core_count, thread_count, ram, single, mcore, mthread, gflops, full, os_name, version):
+def sendForAuth(cpu_name, core_count, thread_count, ram, single, mcore, mthread, gflops, full, os_name, version, key):
     """Temporary measure. This is very insecure."""
     server_ip = "http://87.106.100.187:6407/submit"
 
-    key = "abc"
-
+    headers = {
+        "Authorization": f"Bearer {key}",
+        "Content-Type":"application/json"
+    }
     data = {
-        "api_key":key,
-        
         "payload":
         {
             "cpu_name": cpu_name,
@@ -75,9 +96,42 @@ def sendForAuth(cpu_name, core_count, thread_count, ram, single, mcore, mthread,
         "signature":get_file_hash()
     }
 
-    response = requests.post(server_ip, json=data)    
+    response = requests.post(server_ip, json=data, headers=headers)    
+    return response
 
-    #send
+def upload_and_return_status(name, core_count, thread_count, memory, score, mcore, mthread, gflops, final, distro, version, key):
+            try:
+                response = sendForAuth(name, core_count, thread_count, memory, score, mcore, mthread, gflops, final, distro, version, key)
+                status_code = response.status_code
+                message = response.text
+
+                if status_code:
+                    print("------")
+                if status_code == 200:
+                    print(f"{colours.grey()}The data was uploaded successfully to the database!{colours.reset()}")
+                elif status_code == 403:
+                    print(f"{colours.red()}{message}{colours.reset()}")
+                else:
+                    print(f"{colours.red()}{message}{colours.reset()}")
+            except:
+                print("------")
+                print(f"{colours.grey()}Unknown network status.{colours.reset()}")
+
+def clear():
+    sys.stdout.write("\033c")
+    sys.stdout.flush()
+
+def request_api_key():
+    clear()
+    print(f"{colours.red()}No API key was found for this machine.\n{colours.reset()}Please enter your key: {colours.reset()}")
+    print(f"{colours.grey()}Without an API key, benchmark results cannot be uploaded to the database. You can obtain your API key from creating an account on the CoreBench website. Press [ENTER] to ignore this message and proceed as usual without connecting to the internet.{colours.reset()}")
+    
+    key = input("=> ")
+    key = key.strip()
+
+    write_api_key(key)
+
+#send
 # s'il vous plaît exterminer la vermine mercy bookoooooooo
 # if you can find a way to optimise the loading times that would be good
 # i know it says GPU test in the notes, please do not make the GPU test because it requires pyCUDA and other cuda stuff that is beyond the storage limit for this account, I'll do it when I move to a collab or something idk
@@ -91,11 +145,6 @@ except PermissionError:
 except FileExistsError:
     pass
     os.chdir(homedir)
-
-
-def clear():
-    sys.stdout.write("\033c") 
-    sys.stdout.flush()
 
 clear()
 
@@ -235,7 +284,7 @@ def getData():
             quit()
             
         #UPDATE THIS WITH EVERY VERSION
-        version = "1.4.0"
+        version = "1.4.1"
         #UPDATE THIS WITH EVERY VERSION
         
         endLoad = True
@@ -1053,7 +1102,7 @@ def multiThread(showResults):
 
         avgTime = totalTime/3
 
-        score = round((1/(avgTime/(math.e/1.3))*(math.e)*(2000*(1/math.log(threadCount-2,10))))*10)
+        score = round((1/(avgTime/(math.e/1.3))*(math.e)*(2000*(1/math.log(threadCount*(2*math.e),10))))*10)
         clear()
 
         if not dynamicMode and not fullTest:
@@ -1207,8 +1256,8 @@ def fullCPUTest():
         pass
 
     ##Now we attempt to connect to the database
-    if not dynamicMode:
-        sendForAuth(brandName, CPUs, Threads, memRaw, singleCoreScore, multiCoreScore, multiThreadScore, gflops, finalScore, distroName, version)
+    if not dynamicMode and apikey:
+        upload_and_return_status(brandName, CPUs, Threads, memRaw, singleCoreScore, multiCoreScore, multiThreadScore, gflops, finalScore, distroName, version, apikey)
 
 def test_speed():
     try:
@@ -1276,11 +1325,31 @@ def test_speed():
         f.write(e)
         f.close()
 
+
+# Initiation
+
+apikey = return_api_key()
+
+if not apikey:
+    request_api_key()
+    clear()
+
+apikey = return_api_key()
+
+if is_connected and apikey:
+    text = f"{colours.green()}Online{colours.reset()}"
+else:
+    text = f"{colours.grey()}Offline{colours.reset()}"
+
 if dynamicMode == True:
     print(f"{colours.grey()}DYNAMIC MODE IS ON{colours.reset()}")
     print("------")
 print(f"Welcome back, {colours.green()}{user}{colours.reset()}!")
 print(f"Version: {colours.grey()}{version}{colours.reset()}")
+print("---")
+print(text)
+
+
 prettyPrintData()
 
 if osName.lower() in ["nt", "dos", "windows"]:
@@ -1295,6 +1364,8 @@ else:
 
 
 while True:
+    apikey = return_api_key()
+
     #Logic for sending to SQL Database
     #If not dynamicMode
     #Then connect to database
@@ -1320,8 +1391,9 @@ while True:
     mt - multi thread
     nic - internet speed
     n - internet speed
+    api - set api key
     '''
-    validChoice = ["sc", "st", "mc", "mt", "nic", "n", "fullc", "fc"]
+    validChoice = ["sc", "st", "mc", "mt", "nic", "n", "fullc", "fc", "api"]
     otherChoice = ["exit", "quit", "clear"]
     validArgs = ["d"]
     valid = False
@@ -1425,6 +1497,8 @@ while True:
             index = 3
         elif base in ["n", "nic"]:
             index = 4
+        elif base == "api":
+            index = 5
         
         try:
             if index == 0:
@@ -1447,6 +1521,8 @@ while True:
                 for x in range(num):
                     test_speed()
                 prettyPrintData()
+            elif index == 5:
+                request_api_key()
             else:
                 print(f"{colours.red()}Invalid command{colours.reset()}")
         except KeyboardInterrupt:
