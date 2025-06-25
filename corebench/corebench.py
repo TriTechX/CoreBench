@@ -30,9 +30,6 @@ import requests
 #Custom packages
 import colours
 
-np.__config__.show()
-
-quit()
 #package functions
 mpl.use("Agg")
 
