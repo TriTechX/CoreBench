@@ -286,7 +286,7 @@ def getData():
             quit()
             
         #UPDATE THIS WITH EVERY VERSION
-        version = "1.4.2"
+        version = "1.4.3"
         #UPDATE THIS WITH EVERY VERSION
         
         endLoad = True
