@@ -15,7 +15,6 @@ import getpass
 import csv
 import sys
 import shutil
-import requests
 import hashlib
 #Third-party packages
 import cpuinfo
@@ -26,13 +25,19 @@ import speedtest
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import requests
 
 #Custom packages
 import colours
 
+np.__config__.show()
+
+quit()
 #package functions
 mpl.use("Agg")
 
+
+#GFLOPS CHANGED TO MULTICORE
 homedir = os.getcwd()
 
 def is_connected():
@@ -284,7 +289,7 @@ def getData():
             quit()
             
         #UPDATE THIS WITH EVERY VERSION
-        version = "1.4.1"
+        version = "1.4.2"
         #UPDATE THIS WITH EVERY VERSION
         
         endLoad = True
@@ -486,6 +491,115 @@ def singleCoreCheck():
     if validCore == False:
         quit() #give up
 
+
+def calculateGFLOPS(stageNo, coreCount):
+    N = 1024
+    matA = np.random.rand(N, N)
+    matB = np.random.rand(N, N)
+
+    start = time.perf_counter()
+
+    oldPercentageComplete = -1
+    I = 5000
+
+    for _ in range(3):
+        matC = np.dot(matA,matB) # warmup avoiding CPU frequency scaling issues
+
+    gflopData = []
+    ticker = 0
+
+    for x in range(I):
+        startTemp = time.perf_counter_ns()
+        percentageComplete = (x/I)*100
+
+        if int(round(oldPercentageComplete)) != int(round(percentageComplete)):
+            clear()
+            buffer = []
+            buffer.append(f"{colours.cyan()}Stage {stageNo}{colours.reset()} in progress...")
+            buffer.append("[{}{}-sS{}] {}% Done".format(colours.grey(),3,colours.reset(),int(round(percentageComplete))))
+
+            try:
+                buffer.append("------")
+                buffer.append(f"{colours.green()}Stats{colours.reset()}:")
+                buffer.append("---")
+                buffer.append(f"{colours.magenta()}GFLOPs for last run{colours.reset()}: {round(flopTemp/1000000000,2)}")
+                print("\n".join(buffer))
+            except:
+                pass
+
+        
+        oldPercentageComplete = percentageComplete
+
+        matC = np.dot(matA, matB)  # Matrix multiplication
+
+        endTemp = time.perf_counter_ns()
+
+        flopTemp = (2 * N**3) / (endTemp/1000000000 - startTemp/1000000000)
+        gflopTemp = flopTemp/1000000000
+
+        ticker +=1
+
+        gflopData.append(gflopTemp)
+
+    end = time.perf_counter()
+
+    #compute the mean
+    gflopAvg = sum(gflopData)/len(gflopData)
+
+    #calculate the standard deviation from the mean
+    stdDeviationNumerator = 0
+
+    for item in gflopData:
+        value = (item-gflopAvg)**2
+        stdDeviationNumerator += value
+    
+    stdDeviation = math.sqrt(stdDeviationNumerator/len(gflopData))
+
+    #calculate the Z-score for each point
+    gflopNormalised = []
+    discarded = []
+    for item in gflopData:
+        zScore = (item-gflopAvg)/(stdDeviation)
+
+        if zScore < 2 and zScore > -2:
+            gflopNormalised.append(item)
+        else:
+            discarded.append(item)
+            pass # <-- too anomalous, discarded
+
+    gflopAvgNormalised = sum(gflopNormalised)/len(gflopNormalised)
+    percentDiscarded = (len(discarded)/len(gflopData))*100
+
+    totalTime = end-start
+    avgTime = totalTime/6 #not avg but idgaf
+    score = round((1/(avgTime/(3*math.e)))*(math.e)*(1000*(1/math.log(coreCount+6,10))))
+
+    #timeList.append(totalTime)
+    #scoreList.append(score)
+
+    flops = (2 * N**3) / ((end - start)/I)
+    
+    gflops = gflopAvgNormalised
+
+    cpu_freq = psutil.cpu_freq().current * 1e6
+    flop_per_cycle = (gflops * 1e9) / cpu_freq
+    
+    #cpuTypeList = ["AVX", "AVX2", "SSE"]
+    #cpuTypeFlop = [8,16,4]
+
+    #index = min(range(len(cpuTypeFlop)), key=lambda i: abs(cpuTypeFlop[i] - flop_per_cycle))
+    #cpuType = cpuTypeList[index]
+
+    print(f"{colours.cyan()}FLOP per cycle{colours.reset()}: {round(flop_per_cycle,2)}")
+    # print(f"{colours.green()}Estimated SIMD Instruction Set{colours.reset()}: {cpuType}")
+    print("---")
+    print(f"{colours.magenta()}GFLOPs Performance{colours.reset()}: {round(gflops,2)}")
+    print(f"{colours.green()}Stage {stageNo} complete{colours.reset()}.")
+    print("------")
+    print(f"{colours.cyan()}Discarded values: {percentDiscarded}%")
+
+    return round(gflops,2)
+
 def singleCore(showResults):
     global CPUs, fullTest
 
@@ -680,116 +794,9 @@ def singleCore(showResults):
 
     time.sleep(3)
 
-    #Stage 3: calculate GFLOPS of one core
-    N = 1024
-    matA = np.random.rand(N, N)
-    matB = np.random.rand(N, N)
-
-    start = time.perf_counter()
-
-    oldPercentageComplete = -1
-    I = 5000
-
-    for _ in range(3):
-        matC = np.dot(matA,matB) # warmup avoiding CPU frequency scaling issues
-
-    gflopData = []
-    ticker = 0
-
-    for x in range(I):
-        startTemp = time.perf_counter_ns()
-        percentageComplete = (x/I)*100
-
-        if int(round(oldPercentageComplete)) != int(round(percentageComplete)):
-            clear()
-            buffer = []
-            buffer.append(f"{colours.cyan()}Stage 3{colours.reset()} in progress...")
-            buffer.append("[{}{}-sS{}] {}% Done".format(colours.grey(),3,colours.reset(),int(round(percentageComplete))))
-
-            try:
-                buffer.append("------")
-                buffer.append(f"{colours.green()}Stats{colours.reset()}:")
-                buffer.append("---")
-                buffer.append(f"{colours.magenta()}GFLOPs for last run{colours.reset()}: {round(flopTemp/1000000000,2)}")
-                print("\n".join(buffer))
-            except:
-                pass
-
-        
-        oldPercentageComplete = percentageComplete
-
-        matC = np.dot(matA, matB)  # Matrix multiplication
-
-        endTemp = time.perf_counter_ns()
-
-        flopTemp = (2 * N**3) / (endTemp/1000000000 - startTemp/1000000000)
-        gflopTemp = flopTemp/1000000000
-
-        ticker +=1
-
-        gflopData.append(gflopTemp)
-
-    end = time.perf_counter()
-
-    #compute the mean
-    gflopAvg = sum(gflopData)/len(gflopData)
-
-    #calculate the standard deviation from the mean
-    stdDeviationNumerator = 0
-
-    for item in gflopData:
-        value = (item-gflopAvg)**2
-        stdDeviationNumerator += value
-    
-    stdDeviation = math.sqrt(stdDeviationNumerator/len(gflopData))
-
-    #calculate the Z-score for each point
-    gflopNormalised = []
-    discarded = []
-    for item in gflopData:
-        zScore = (item-gflopAvg)/(stdDeviation)
-
-        if zScore < 2 and zScore > -2:
-            gflopNormalised.append(item)
-        else:
-            discarded.append(item)
-            pass # <-- too anomalous, discarded
-
-    gflopAvgNormalised = sum(gflopNormalised)/len(gflopNormalised)
-    percentDiscarded = (len(discarded)/len(gflopData))*100
-
-    totalTime = end-start
-    avgTime = totalTime/6 #not avg but idgaf
-    score = round((1/(avgTime/(3*math.e)))*(math.e)*(1000*(1/math.log(coreCount+4,10))))
-
-    timeList.append(totalTime)
-    scoreList.append(score)
-
-    flops = (2 * N**3) / ((end - start)/I)
-    
-    gflops = gflopAvgNormalised
-
-    cpu_freq = psutil.cpu_freq().current * 1e6
-    flop_per_cycle = (gflops * 1e9) / cpu_freq
-    
-    cpuTypeList = ["AVX", "AVX2", "SSE"]
-    cpuTypeFlop = [8,16,4]
-
-    index = min(range(len(cpuTypeFlop)), key=lambda i: abs(cpuTypeFlop[i] - flop_per_cycle))
-    cpuType = cpuTypeList[index]
-
-    print(f"{colours.cyan()}FLOP per cycle{colours.reset()}: {round(flop_per_cycle,2)}")
-    print(f"{colours.green()}Estimated SIMD Instruction Set{colours.reset()}: {cpuType}")
-    print("---")
-    print(f"{colours.magenta()}GFLOPs Performance{colours.reset()}: {round(gflops,2)}")
-    print(f"{colours.green()}Stage 3 complete{colours.reset()}.")
-    print("------")
-    print(f"{colours.cyan()}Discarded values: {percentDiscarded}%")
-    time.sleep(3)
-
     clear()
 
-    score = int(round(sum(scoreList)/3))
+    score = int(round(sum(scoreList)/2))
     totalTime = sum(timeList)
     
     if not dynamicMode and not fullTest:
@@ -806,58 +813,16 @@ def singleCore(showResults):
         print(f"{colours.green()}Single Core Benchmark Complete!{colours.reset()} ({colours.grey()}{version}{colours.reset()})")
         print(f"{colours.magenta()}Total time{colours.reset()}: {totalTime} seconds")
         print(f"{colours.cyan()}Single core score{colours.reset()}: {score}")
-        print("---")
-        print(f"{colours.green()}Floating point operations performance{colours.reset()}: {round(gflops,2)} GFLOPs")
     
-    return score, gflops
+    return score
 
 
 #Multicore testos.remove("c
-def multiCore(showResults): 
-    p = psutil.Process(os.getpid())
-    p.cpu_affinity(list(range(os.cpu_count())))
-
-    def intense1(threadNo):
-        print("[{}{}-rC{}] Crunching numbers...".format(colours.cyan(), threadNo, colours.reset()))
-    
-        ballHeight = 500
-        
-        GFLUCTUATION = random.randint(-10,10)/10
-        ACCELERATION = 9.81+GFLUCTUATION
-        BOUNCECONSTANT = random.randint(1, 10)
-
-        timeSimulated = 0
-        timeIncrement = 1e-6
-        distanceTravelled = 0
-
-        yVel = 0
-
-
-        timeToHit = math.sqrt(ballHeight/(0.5*ACCELERATION))
-
-        while distanceTravelled < ballHeight:
-
-            yVel = yVel-timeIncrement*ACCELERATION
-            timeSimulated+=timeIncrement
-
-            
-            distanceTravelled = 0.5 * ACCELERATION * timeSimulated**2
-
-        yVel = -yVel - (BOUNCECONSTANT)
-
-        timeList.append(timeSimulated)
-
-        u = yVel
-        a = ACCELERATION
-
-        distanceTravelled = 0
-
-        estimatedHeight =  (u**2)/(2*a)
-
-        print("[{}{}-cC{}] Instance complete!".format(colours.green(), threadNo, colours.reset()))
-    
-    def intense2(threadNo):
-        print("[{}{}-rC{}] Crunching numbers...".format(colours.cyan(), threadNo, colours.reset()))
+def multiCore(showResults):     
+    def intense1(threadNo, coreID):
+        p = psutil.Process(os.getpid())
+        p.cpu_affinity(coreID)
+        print("[{}{}-rC{}] Crunching numbers on core {}...".format(colours.cyan(), threadNo, colours.reset(), coreID))
 
         arrowHeight = 500
         
@@ -902,37 +867,28 @@ def multiCore(showResults):
     print(f"This one {colours.cyan()}generally{colours.reset()} doesn't take too long.")
     print("------")
 
-    if __name__ == "__main__":
-        def run_processes():
-            if __name__ == "__main__":
-                global coreCount, CPUs, coreContext
-    
-                if dynamicMode == True:
-                    coreCount = int(CPUs)
-                else:
-                    coreCount = 6
-    
-                processes = []
-                ticker = 0
-    
-                for i in range(coreCount):
-                    if ticker == 0:
-                        p = coreContext.Process(target=intense1, args=(i+1,))
-                        ticker = 1
-                    elif ticker == 1:
-                        p = coreContext.Process(target=intense2, args=(i+1,))
-                        ticker = 0
-    
-                    processes.append(p)
-                    p.start()
-    
-                for p in processes:
-                    p.join()
+    def run_processes():
+        global coreCount, CPUs, coreContext
+
+        if dynamicMode:
+            coreCount = int(CPUs)
+        else:
+            coreCount = 6
+
+        processes = []
+
+        for i in range(coreCount):
+            p = multiprocessing.Process(target=intense1, args=(i + 1, [i]))
+            processes.append(p)
+            p.start()
+
+        for p in processes:
+            p.join()
                     
-    #run the test 3 times
+
     for x in range(0,3):
         start=time.perf_counter()
-        #run tests
+
         if __name__ == "__main__":     
             run_processes()
 
@@ -945,8 +901,14 @@ def multiCore(showResults):
         totalTime+=item
 
     avgTime = totalTime/3
-    score = round((1/(avgTime/(math.e/1.5))*(math.e)*(1000*(1/math.log(coreCount+4,10)))))
+
+    score = round((1/(avgTime/(math.e/1.8))*(math.e)*(1000*(1/math.log(coreCount-4,10))))/2)
+    time.sleep(3)
     clear()
+    gflops = calculateGFLOPS("2", coreCount)
+    time.sleep(3)
+    clear()
+ 
 
     if not dynamicMode and not fullTest:
         data = [["", score, "", ""]]
@@ -963,165 +925,124 @@ def multiCore(showResults):
         print("------")
         print(f"{colours.magenta()}Total time{colours.reset()}: {totalTime} seconds")
         print(f"{colours.cyan()}Multi core score{colours.reset()}: {score} points")
+        print("---")
+        print(f"{colours.green()}Floating point operations performance{colours.reset()}: {round(gflops,2)} GFLOPs")
+
+    return score, gflops
+
+
+def multiThread(showResults):
+    logical_cores = os.cpu_count()
+    p = psutil.Process(os.getpid())
+    p.cpu_affinity(list(range(logical_cores)))
+
+    def intense1(procNo, timeList, core_id):
+        p = psutil.Process(os.getpid())
+        p.cpu_affinity([core_id])  # Pin this process to specific core
+        print(f"[{colours.magenta()}{procNo}-rT{colours.reset()}] Crunching numbers on core [{core_id}]...")
+        ballHeight = 250
+        ACCELERATION = 9.81 + random.randint(-10, 10) / 10
+        BOUNCECONSTANT = random.randint(1, 10)
+        timeSimulated = 0
+        timeIncrement = 1e-6
+        distanceTravelled = 0
+        yVel = 0
+        while distanceTravelled < ballHeight:
+            yVel -= timeIncrement * ACCELERATION
+            timeSimulated += timeIncrement
+            distanceTravelled = 0.5 * ACCELERATION * timeSimulated**2
+        yVel = -yVel - BOUNCECONSTANT
+        timeList.append(timeSimulated)
+        print(f"[{colours.green()}{procNo}-cT{colours.reset()}] Instance complete!")
+
+    def intense2(procNo, timeList, core_id):
+        p = psutil.Process(os.getpid())
+        p.cpu_affinity([core_id])  # Pin this process to specific core
+        print(f"[{colours.magenta()}{procNo}-rT{colours.reset()}] Crunching numbers on core [{core_id}]...")
+        arrowHeight = 250
+        ACCELERATION = 9.81 + random.randint(-10, 10) / 10
+        timeSimulated = 0
+        timeIncrement = 1e-6
+        yDistanceTravelled = 0
+        xVel = 50
+        yVel = 0
+        while yDistanceTravelled < arrowHeight:
+            yVel -= timeIncrement * ACCELERATION
+            timeSimulated += timeIncrement
+            yDistanceTravelled = 0.5 * ACCELERATION * timeSimulated**2
+            xDistanceTravelled = xVel * timeSimulated
+            angle = -math.atan2(yVel, xVel) * (180 / math.pi)
+            resultantVelocity = math.sqrt(yVel**2 + xVel**2)
+        timeList.append(timeSimulated)
+        print(f"[{colours.green()}{procNo}-cT{colours.reset()}] Instance complete!")
+
+    if dynamicMode:
+        threadCount = Threads
+    else:
+        threadCount = 12  # 6 pairs = 12 processes
+
+    def run_processes():
+        with multiprocessing.Manager() as manager:
+            timeList = manager.list()
+            processes = []
+            
+            if dynamicMode:
+                pair_count = int(Threads/2)
+            else:
+                pair_count = 6
+            
+            for i in range(pair_count):
+                core_id = i
+                p1 = multiprocessing.Process(target=intense1, args=(i*2 + 1, timeList, core_id))
+                p2 = multiprocessing.Process(target=intense2, args=(i*2 + 2, timeList, core_id))
+                processes.extend([p1, p2])
+                p1.start()
+                p2.start()
+
+            for p in processes:
+                p.join()
+
+            return list(timeList)
+
+    print(f"The {colours.red()}pain{colours.reset()} should be {colours.magenta()}over quickly{colours.reset()}...")
+    print("------")
+
+    timeResults = []
+
+    if __name__ == "__main__":
+        for _ in range(3):
+            start = time.perf_counter()
+            timeList = run_processes()
+            end = time.perf_counter()
+            timeResults.append(end - start)
+
+    totalTime = sum(timeResults)
+    avgTime = totalTime / 3
+
+    if dynamicMode:
+        score = round((1/(avgTime/(math.e/1.5))*(math.e)*(1000*(1/math.log(threadCount,10)))))
+    else:
+        score = round((1/(avgTime/(math.e/1.5))*(math.e)*(1000*(1/math.log(threadCount-6,10)))))
+    clear()
+
+    if not dynamicMode and not fullTest:
+        data = [["", "", score, ""]]
+        filename = "DATA/corebenchdata.csv"
+        with open(filename, "a", newline="", encoding="utf-8") as file:
+            writer = csv.writer(file)
+            writer.writerows(data)
+
+    if showResults:
+        if dynamicMode:
+            print(f"{colours.grey()}DYNAMIC MODE IS ON{colours.reset()}")
+            print("------")
+        print(f"{colours.green()}Multi Thread Test Complete!{colours.reset()} ({colours.grey()}{version}{colours.reset()})")
+        print("------")
+        print(f"{colours.magenta()}Total time{colours.reset()}: {totalTime:.4f} seconds")
+        print(f"{colours.cyan()}Multi thread score{colours.reset()}: {score} points")
 
     return score
 
-
-#multithreading test, with the same basic algorithms as the multicore test
-def multiThread(showResults):
-
-    p = psutil.Process(os.getpid())
-    p.cpu_affinity(list(range(os.cpu_count())))
-
-
-    def intense1(threadNo):
-        print("[{}{}-rT{}] Crunching numbers...".format(colours.magenta(), threadNo, colours.reset()))
-    
-        ballHeight = 250
-        
-        GFLUCTUATION = random.randint(-10,10)/10
-        ACCELERATION = 9.81+GFLUCTUATION
-        BOUNCECONSTANT = random.randint(1, 10)
-
-        timeSimulated = 0
-        timeIncrement = 1e-6
-        distanceTravelled = 0
-
-        yVel = 0
-
-
-        timeToHit = math.sqrt(ballHeight/(0.5*ACCELERATION))
-
-        while distanceTravelled < ballHeight:
-
-            yVel = yVel-timeIncrement*ACCELERATION
-            timeSimulated+=timeIncrement
-
-            
-            distanceTravelled = 0.5 * ACCELERATION * timeSimulated**2
-
-        yVel = -yVel - (BOUNCECONSTANT)
-
-        timeList.append(timeSimulated)
-
-        u = yVel
-        a = ACCELERATION
-
-        distanceTravelled = 0
-
-        estimatedHeight =  (u**2)/(2*a)
-
-        print("[{}{}-cT{}] Instance complete!".format(colours.green(), threadNo, colours.reset()))
-
-    
-    def intense2(threadNo):
-        print("[{}{}-rT{}] Crunching numbers...".format(colours.magenta(), threadNo, colours.reset()))
-
-        arrowHeight = 250
-        
-        GFLUCTUATION = random.randint(-10,10)/10
-        ACCELERATION = 9.81+GFLUCTUATION
-
-        timeSimulated = 0
-        timeIncrement = 1e-6
-
-        yDistanceTravelled = 0
-        xDistanceTravelled = 0
-
-        yVel = 0
-        xVel = 50
-
-        timeToHit = math.sqrt(arrowHeight/(0.5*ACCELERATION))
-
-        while yDistanceTravelled < arrowHeight:
-
-            yVel = yVel - timeIncrement*ACCELERATION
-
-            timeSimulated+=timeIncrement
-            yDistanceTravelled = 0.5 * ACCELERATION * timeSimulated**2
-
-            xDistanceTravelled = xVel*timeSimulated
-
-            angle = -math.atan2(yVel,xVel)*(180/math.pi) #radians to degrees
-            resultantVelocity = math.sqrt(yVel**2+xVel**2) #calculates the resultant velocity
-        
-        print("[{}{}-cT{}] Instance complete!".format(colours.green(), threadNo, colours.reset()))
-
-    if __name__ == "__main__": 
-        if dynamicMode == True:
-            threadCount = Threads
-            
-        else:
-            threadCount = 12
-            
-        def run_threads():
-            global threadCount, Threads
-
-            if dynamicMode == True:
-                threadCount = int(Threads)
-            else:
-                threadCount = 12
-
-            threads = []
-            ticker = 0
-
-            for i in range(threadCount):
-                if ticker == 0:
-                    t = threading.Thread(target=intense1, args=(i+1,))
-                    ticker = 1
-                elif ticker == 1:
-                    t = threading.Thread(target=intense2, args=(i+1,))
-                    ticker = 0
-
-                threads.append(t)
-                t.start()
-
-            for t in threads:
-                t.join()
-                
-        timeList = []
-        print(f"The {colours.red()}pain{colours.reset()} should be {colours.magenta()}over quickly{colours.reset()}...")
-        print("------")
-        for x in range(0,3):
-
-            start=time.perf_counter()
-            if __name__ == "__main__":
-                run_threads()
-
-            end=time.perf_counter()
-
-            Time = end-start
-            timeList.append(Time)
-
-        print(timeList)
-
-        totalTime = 0
-
-        for item in timeList:
-            totalTime+=item
-
-        avgTime = totalTime/3
-
-        score = round((1/(avgTime/(math.e/1.3))*(math.e)*(2000*(1/math.log(threadCount*(2*math.e),10))))*10)
-        clear()
-
-        if not dynamicMode and not fullTest:
-            data = [["", "", score, ""]]
-            filename = "DATA/corebenchdata.csv"
-            with open(filename, "a", newline="", encoding="utf-8") as file:
-                writer = csv.writer(file)
-                writer.writerows(data)
-                
-        if showResults == True:
-            if dynamicMode == True:
-                print(f"{colours.grey()}DYNAMIC MODE IS ON{colours.reset()}")
-                print("------")
-            print(f"{colours.green()}Multi Thread Test Complete!{colours.reset()} ({colours.grey()}{version}{colours.reset()})")
-            print("------")
-            print(f"{colours.magenta()}Total time{colours.reset()}: {totalTime} seconds")
-            print(f"{colours.cyan()}Multi thread score{colours.reset()}: {score} points")
-
-        return score
 
 
 def fullCPUTest():
@@ -1145,9 +1066,9 @@ def fullCPUTest():
             time.sleep(1)
             clear()
         
-    singleCoreScore, gflops = singleCore(False)
+    singleCoreScore = singleCore(False)
     coolDown(singleCoreScore)
-    multiCoreScore = multiCore(False)
+    multiCoreScore, gflops = multiCore(False)
     coolDown(multiCoreScore)
     multiThreadScore = multiThread(False)
 
