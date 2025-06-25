@@ -490,6 +490,8 @@ def singleCoreCheck():
 
 
 def calculateGFLOPS(stageNo, coreCount):
+    p = psutil.Process(os.getpid())
+    p.cpu_affinity(list(range(os.cpu_count())))
     N = 1024
     matA = np.random.rand(N, N)
     matB = np.random.rand(N, N)
@@ -569,7 +571,8 @@ def calculateGFLOPS(stageNo, coreCount):
 
     totalTime = end-start
     avgTime = totalTime/6 #not avg but idgaf
-    score = round((1/(avgTime/(3*math.e)))*(math.e)*(1000*(1/math.log(coreCount+6,10))))
+    
+    #score = round((1/(avgTime/(3*math.e)))*(math.e)*(1000*(1/math.log(coreCount+6,10))))
 
     #timeList.append(totalTime)
     #scoreList.append(score)
