@@ -1459,6 +1459,7 @@ while True:
             elif index == 5:
                 request_api_key()
             else:
-                print(f"{colours.red()}Invalid command{colours.reset()}")
+                pass
+                #print(f"{colours.red()}Invalid command{colours.reset()}")
         except KeyboardInterrupt:
             print(f"{colours.red()}Test cancelled{colours.reset()}.")
