@@ -286,7 +286,7 @@ def getData():
             quit()
             
         #UPDATE THIS WITH EVERY VERSION
-        version = "1.4.4"
+        version = "1.4.5"
         #UPDATE THIS WITH EVERY VERSION
         
         endLoad = True
@@ -819,12 +819,30 @@ def singleCore(showResults):
     
     return score
 
+def get_physical_core_ids():
+    output = subprocess.check_output(['lscpu', '-p=CPU,Core,Socket'], text=True)
+    lines = output.strip().split('\n')
+    
+    physical_cores = {}
+    for line in lines:
+        if line.startswith('#'):
+            continue
+        cpu_id_str, core_id_str, socket_id_str = line.strip().split(',')
+        cpu_id = int(cpu_id_str)
+        core_id = int(core_id_str)
+        socket_id = int(socket_id_str)
+
+        key = (core_id, socket_id)
+        if key not in physical_cores:
+            physical_cores[key] = cpu_id 
+    
+    return sorted(physical_cores.values())
 
 def multiCore(showResults):     
     def intense1(threadNo, coreID):
         p = psutil.Process(os.getpid())
         p.cpu_affinity(coreID)
-        print("[{}{}-rC{}] Crunching numbers on core {}...".format(colours.cyan(), threadNo, colours.reset(), coreID))
+        print("[{}{}-rC{}] Crunching numbers on core {}...".format(colours.cyan(), threadNo, colours.reset(), int(math.floor(coreID[0]/2))))
 
         arrowHeight = 500
         
@@ -869,18 +887,27 @@ def multiCore(showResults):
     print(f"This one {colours.cyan()}generally{colours.reset()} doesn't take too long.")
     print("------")
 
+
     def run_processes():
         global coreCount, CPUs, coreContext
 
         if dynamicMode:
-            coreCount = int(CPUs)
+            coreCount = os.cpu_count()
         else:
-            coreCount = 6
+            coreCount = 12
 
         processes = []
 
-        for i in range(coreCount):
-            coreRun = i % CPUs
+        #validation process
+        logical = os.cpu_count()
+        coreList = get_physical_core_ids()
+
+        # if any core ID is invalid (>= logical), fallback
+        if any(core >= logical for core in coreList):
+            coreList = list(range(CPUs))
+
+        for i in range(coreCount//2):
+            coreRun = coreList[i%len(coreList)]
 
             p = multiprocessing.Process(target=intense1, args=(i + 1, [coreRun]))
             processes.append(p)
@@ -942,10 +969,10 @@ def multiThread(showResults):
     p = psutil.Process(os.getpid())
     p.cpu_affinity(list(range(logical_cores)))
 
-    def intense1(procNo, timeList, core_id, thread_id, thread_pass):
+    def intense1(procNo, timeList, core_id, core_show, thread_id, thread_pass):
         p = psutil.Process(os.getpid())
         p.cpu_affinity([core_id])  # Pin this process to specific core
-        print(f"[{colours.magenta()}{procNo}-rT{colours.reset()}-[p]{thread_pass}] Crunching numbers on core [{core_id}] thread [{thread_id}]...")
+        print(f"[{colours.magenta()}{procNo}-rT{colours.reset()}-{colours.magenta()}[p]{thread_pass}{colours.reset()}] Crunching numbers on core [{core_show}] thread [{thread_id}]...")
         ballHeight = 250
         ACCELERATION = 9.81 + random.randint(-10, 10) / 10
         BOUNCECONSTANT = random.randint(1, 10)
@@ -961,10 +988,10 @@ def multiThread(showResults):
         timeList.append(timeSimulated)
         print(f"[{colours.green()}{procNo}-cT{colours.reset()}] Instance complete!")
 
-    def intense2(procNo, timeList, core_id, thread_id, thread_pass):
+    def intense2(procNo, timeList, core_id, core_show, thread_id, thread_pass):
         p = psutil.Process(os.getpid())
         p.cpu_affinity([core_id])  # Pin this process to specific core
-        print(f"[{colours.magenta()}{procNo}-rT{colours.reset()}-[p]{thread_pass}] Crunching numbers on core [{core_id}] thread [{thread_id}]...")
+        print(f"[{colours.magenta()}{procNo}-rT{colours.reset()}-{colours.magenta()}[p]{thread_pass}{colours.reset()}] Crunching numbers on core [{core_show}] thread [{thread_id}]...")
         arrowHeight = 250
         ACCELERATION = 9.81 + random.randint(-10, 10) / 10
         timeSimulated = 0
@@ -985,31 +1012,39 @@ def multiThread(showResults):
     if dynamicMode:
         threadCount = Threads
     else:
-        threadCount = 12  # 6 pairs = 12 processes
+        threadCount = 12 
 
     def run_processes():
         with multiprocessing.Manager() as manager:
             timeList = manager.list()
             processes = []
-            
+
+            total_logical_threads = os.cpu_count()
+            logical_thread_ids = list(range(total_logical_threads))
+            #physical_cores = get_physical_core_ids()
+            #total_physical_cores = len(physical_cores)
+
+            thread_pass = 0
+
             if dynamicMode:
-                pair_count = int(Threads/2)
+                threadCount = Threads
             else:
-                pair_count = 6
-            
-            timeList = multiprocessing.Manager().list()
+                threadCount = 12
 
-            for i in range(pair_count*2):
-                coreRun = i % CPUs                         # Cycles through cores
-                totalThreads = int(os.cpu_count())                  # Logical threads
-                threadRun = (i % (totalThreads // CPUs))   # Cycles through threads per core
-                threadPass = i // totalThreads             # Track thread passes
+            for i in range(threadCount):
+                #wrap around logical threads if there are fewer than 12
+                logical_id = logical_thread_ids[i % total_logical_threads]
 
-                if i % 2 == 0:
-                    p = multiprocessing.Process(target=intense1, args=(i + 1, timeList, coreRun, threadRun, threadPass))
+                core_show = logical_id // 2  #just for display
+                thread_id = logical_id % 2
+                proc_no = i + 1
+                thread_pass = i // total_logical_threads
+
+                if proc_no % 2 == 0:
+                    p = multiprocessing.Process(target=intense2, args=(proc_no, timeList, logical_id, core_show, thread_id, thread_pass))
                 else:
-                    p = multiprocessing.Process(target=intense2, args=(i + 1, timeList, coreRun, threadRun, threadPass))
-                
+                    p = multiprocessing.Process(target=intense1, args=(proc_no, timeList, logical_id, core_show, thread_id, thread_pass))
+
                 processes.append(p)
                 p.start()
 
