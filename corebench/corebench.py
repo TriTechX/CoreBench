@@ -71,7 +71,6 @@ def get_file_hash():
     return sha256.hexdigest()
 
 def sendForAuth(cpu_name, core_count, thread_count, ram, single, mcore, mthread, gflops, full, os_name, version, key):
-    """Temporary measure. This is very insecure."""
     server_ip = "https://submit.corebench.me/submit"
 
     headers = {
@@ -104,7 +103,6 @@ def sendForAuth(cpu_name, core_count, thread_count, ram, single, mcore, mthread,
     return response
 
 def apiCheck(apiKey):
-    """Temporary measure. This is very insecure."""
     server_ip = "https://submit.corebench.me/submit"
 
     headers = {
