@@ -65,8 +65,8 @@ def get_file_hash():
     filename = os.path.abspath(__file__)
 
     with open(filename, 'rb') as f:
-        for chunk in iter(lambda: f.read(4096), b''):
-            sha256.update(chunk)
+        file_bytes = f.read()
+        sha256.update(file_bytes)
 
     return sha256.hexdigest()
 
