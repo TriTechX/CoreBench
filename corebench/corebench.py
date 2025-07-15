@@ -46,6 +46,7 @@ def is_connected():
     except requests.ConnectionError:
         return False
 
+
 def return_api_key():
     if os.path.exists("apikey.txt"):
         with open("apikey.txt", "r") as f:
@@ -71,7 +72,7 @@ def get_file_hash():
 
 def sendForAuth(cpu_name, core_count, thread_count, ram, single, mcore, mthread, gflops, full, os_name, version, key):
     """Temporary measure. This is very insecure."""
-    server_ip = "http://87.106.100.187:6407/submit"
+    server_ip = "https://submit.corebench.me/submit"
 
     headers = {
         "Authorization": f"Bearer {key}",
@@ -95,9 +96,44 @@ def sendForAuth(cpu_name, core_count, thread_count, ram, single, mcore, mthread,
 
         "timestamp": time.time(),
 
-        "signature":get_file_hash()
+        "signature":get_file_hash(),
+        "purpose":""
     }
 
+    response = requests.post(server_ip, json=data, headers=headers)    
+    return response
+
+def apiCheck(apiKey):
+    """Temporary measure. This is very insecure."""
+    server_ip = "https://submit.corebench.me/submit"
+
+    headers = {
+        "Authorization": f"Bearer {apiKey}",
+        "Content-Type":"application/json"
+    }
+    data = {
+        "payload":
+        {
+            "cpu_name": "",
+            "core_count":"",
+            "thread_count":"",
+            "ram":"",
+            "single_core": "",
+            "multi_core": "",
+            "multi_thread": "",
+            "gflops": "",
+            "overall_score": "",
+            "os_name": "",
+            "version": ""
+        },
+
+        "timestamp": time.time(),
+
+        "signature":get_file_hash(),
+
+        "purpose":"API_CHECK"
+    }
+    
     response = requests.post(server_ip, json=data, headers=headers)    
     return response
 
@@ -112,13 +148,13 @@ def upload_and_return_status(name, core_count, thread_count, memory, score, mcor
                 if status_code == 200:
                     print(f"{colours.grey()}The data was uploaded successfully to the database!{colours.reset()}")
                 elif status_code == 403:
-                    print(f"{colours.red()}{message}{colours.reset()}")
+                    print(f"{colours.red()}{response.json()['detail']}{colours.reset()}")
                 else:
-                    print(f"{colours.red()}{message}{colours.reset()}")
-            except:
-                print("------")
-                print(f"{colours.grey()}Unknown network status.{colours.reset()}")
+                    print(f"{colours.red()}{response.json()['detail']}{colours.reset()}")
+            except Exception as e:
+                print(f"{colours.grey()}The server did not respond.{colours.reset()}")
 
+#quit()
 def clear():
     sys.stdout.write("\033c")
     sys.stdout.flush()
@@ -138,21 +174,22 @@ def request_api_key():
 # if you can find a way to optimise the loading times that would be good
 # i know it says GPU test in the notes, please do not make the GPU test because it requires pyCUDA and other cuda stuff that is beyond the storage limit for this account, I'll do it when I move to a collab or something idk
 
+
+#TRY TO INITIATE THE DATA DIRECTORY
 try:
     os.mkdir("DATA")
     os.chdir(homedir)
 except PermissionError:
     print("Failed to make DATA directory. Please give CoreBench rw access to its current directory.")
     exit()
-except FileExistsError:
-    pass
+except FileExistsError: #DIRECTORY EXISTS, PASS
     os.chdir(homedir)
-
 clear()
+#END OF ARBITRARY INITIATION OF DATA DIRECTORY
 
 #this is a part of the loading process that happens before the loading screen
 def prefetch():
-    global osName, memRaw, brandName, hostname, localIp, done
+    global osName, memRaw, brandName, hostname, localIp, done #probably shouldn't be using globals but it works...
     osName = platform.system()
     memRaw = round(((psutil.virtual_memory().total)/(1e+6)))
     brandName = cpuinfo.get_cpu_info()["brand_raw"]
@@ -190,35 +227,18 @@ if __name__ == "__main__":
 
 ### ZONE OF EXPERIMENTATION ###
 ### END OF ZONE ###
-
 #yeah
 def get_user():
     return getpass.getuser()
-
-#makes sure it's running admin
-if str(os.name).lower() in ["nt", "dos", "windows"]:
-    def checkRoot():
-        try:
-            return ctypes.windll.shell32.IsUserAnAdmin() != 0
-        except:
-            return False
-else:
-    def checkRoot():
-        return os.getuid() == 0
-
-if checkRoot():
-    pass
-else:
-    pass
-    # print(colours.red() + "This script needs to be run as administrator, bugs may occur." + colours.reset())
-    # temp = input(colours.grey() + "Press [ENTER] to continue..." + colours.reset())
-    
 
 #Get system information, runs during the main load
 def getData():
     try:
     
-        global hostname, GPUs, osName, architecture, brandName, clockSpeed, CPUs, memRaw, memory, endLoad, distroName, localIp, Threads, threadsPerCore, osNamePretty, user, version
+        global hostname, GPUs, osName, architecture, brandName, clockSpeed, \
+            systemCoreCount, memRaw, memory, endLoad, distroName, localIp, \
+            Threads, threadsPerCore, osNamePretty, user, version #improved readability
+        
         try:
             hostname = socket.gethostname()
             localIp = socket.gethostbyname(socket.gethostname())
@@ -238,9 +258,9 @@ def getData():
                     return str(e)
             
             clockSpeed = get_advertised_cpu_clock()
-            CPUs = psutil.cpu_count(logical=False)
+            systemCoreCount = psutil.cpu_count(logical=False)
             Threads = os.cpu_count()
-            threadsPerCore= int(os.cpu_count())/int(CPUs)
+            threadsPerCore= int(os.cpu_count())/int(systemCoreCount)
             memRaw = round(((psutil.virtual_memory().total)/(1024**2)))
             memory = math.ceil(((psutil.virtual_memory().total)/(1024**3)))
 
@@ -286,7 +306,7 @@ def getData():
             quit()
             
         #UPDATE THIS WITH EVERY VERSION
-        version = "1.4.5"
+        version = "1.4.6"
         #UPDATE THIS WITH EVERY VERSION
         
         endLoad = True
@@ -295,15 +315,23 @@ def getData():
         f = open("log.txt","w")
         f.write(str(e))
         f.close()
-messages = ["So, you're back...", "Hello there!", "It's hot in here...", "400FPS", "Disabling frame generation...", "RTX ON", "Removing nanites...", "Stealing your personal information...", "Pro tip: bench", "Sussy Bucket", "No standard users allowed!", "Connecting to the (totally functional) CoreBench database...", "Getting more ping...", "Optimizing...", "Initiating...", "WELCOME.", f"Here with your {brandName} I see...", f"{osName}? A fellow man of culture...", f"Eating all {memRaw}MB of RAM...", "Overclocking...", "Deleting main.py...", "Always remember to remove the French language pack!", f"Not much of a {osName} fan myself, but you do you...", f"Welcome back {hostname}.", f"Haha! Got your IP! Seriously! {localIp}", "I use Arch btw", "I use Core btw", "Over 6GHz!", "Bringing out the Intel Pentium...", "Gathering texel fillrate...", "Collecting frames...", "No fake frames here!", "Changing boot order...", "Imagine if you were using this on Windows lol", "Still held prisoner by Replit.", "It's dangerous to go alone.", "All your bench are belong to us.", "GPU bench coming soon. Maybe.", "Unused RAM is useless RAM. Give some to me."]
-
-message = messages[random.randint(0,len(messages)-1)]
 
 
 #runs the loading screen
 def loadingScreen():
+    #SELECT LOADING MESSAGE
+    messages = ["So, you're back...", "Hello there!", "It's hot in here...", "400FPS", "Disabling frame generation...", 
+                "RTX ON", "Removing nanites...", "Stealing your personal information...", "Pro tip: bench", 
+                "Sussy Bucket", "No standard users allowed!", "Connecting to the (totally functional) CoreBench database...",
+                "Getting more ping...", "Optimizing...", "Initiating...", "WELCOME.", f"Here with your {brandName} I see...", f"{osName}? A fellow man of culture...",
+                    f"Eating all {memRaw}MB of RAM...", "Overclocking...", "Deleting main.py...", "Always remember to remove the French language pack!", 
+                    f"Not much of a {osName} fan myself, but you do you...", f"Welcome back {hostname}.", f"Haha! Got your IP! Seriously! {localIp}", "I use Arch btw",
+                    "I use Core btw", "Over 6GHz!", "Bringing out the Intel Pentium...", "Gathering texel fillrate...", "Collecting frames...", "No fake frames here!",
+                        "Changing boot order...", "Imagine if you were using this on Windows lol", "Still held prisoner by Replit.", "It's dangerous to go alone.", 
+                        "All your bench are belong to us.", "GPU bench coming soon. Maybe.", "Unused RAM is useless RAM. Give some to me."]
+    message = messages[random.randint(0,len(messages)-1)]
+
     try:
-        
         global endLoad
         clear()
         
@@ -369,8 +397,8 @@ def loadingScreen():
 
 if __name__ == "__main__":
     try:
-        grep = threading.Thread(target=getData)
-        load = threading.Thread(target=loadingScreen)
+        grep = threading.Thread(target=getData)  #get system data
+        load = threading.Thread(target=loadingScreen) #simultaneously show loading screen whilst gathering data to convince the user that progress is being made
     
         endLoad = False
         
@@ -384,6 +412,9 @@ if __name__ == "__main__":
         f = open("log.txt","a")
         f.write(e)
         f.close()
+#LOADING PROCESS HAS ENDED
+
+
 
 def prettyPrintData():
     if "AMD" in brandName:
@@ -409,7 +440,7 @@ def prettyPrintData():
     print(f"{colours.cyan()}CPU clock speed{colours.reset()}: {clockSpeed}")
     
     
-    print(f"{colours.green()}CPUs{colours.reset()}: {CPUs} Cores")
+    print(f"{colours.green()}CPUs{colours.reset()}: {systemCoreCount} Cores")
     print(f"{colours.cyan()}Threads{colours.reset()}: {Threads} Threads")
     
     print("------")
@@ -431,10 +462,13 @@ else:
     gpuPresent = False
 
 
-N = 1000000
-#intensity of the test, point system will not scale with intensity
-filename = "corebenchinfo.txt"
 
+#intensity of the test, point system will not scale with intensity
+N = 1000000 #a bit of a magic number
+
+
+#Initiate data files
+filename = "corebenchinfo.txt"
 if not os.path.exists(filename) or os.path.getsize(filename) == 0:
     f=open("corebenchinfo.txt", "w")
     f.close()
@@ -445,7 +479,7 @@ if not os.path.exists(filename) or os.path.getsize(filename) == 0:
     f.write("Architecture: " + str(architecture) + "\n")
     f.write("CPU Name: " + str(brandName) + "\n")
     f.write("CPU clock speed: " + str(clockSpeed) + "\n")
-    f.write("CPUs: " + str(CPUs) + "\n")
+    f.write("CPUs: " + str(systemCoreCount) + "\n")
     f.write("Threads: " + str(Threads) + "\n")
     f.write("Threads Per Core: " + str(threadsPerCore) + "\n")
     f.write("RAM: " + str(memRaw) + " MB\n")
@@ -468,9 +502,8 @@ if not os.path.exists(filename) or os.path.getsize(filename) == 0:
 
 
 
-
 #single core test algorithm rewrite
-def singleCoreCheck():
+def setSingleCoreAffinity():
     p = psutil.Process(os.getpid())
     
     validCore = False
@@ -495,24 +528,28 @@ def singleCoreCheck():
 def calculateGFLOPS(stageNo, coreCount):
     p = psutil.Process(os.getpid())
     p.cpu_affinity(list(range(os.cpu_count())))
-    N = 1024
-    matA = np.random.rand(N, N)
-    matB = np.random.rand(N, N)
+
+    matrixSize = 1024 #number of iterations
+
+    matrixA = np.random.rand(matrixSize, matrixSize)
+    matrixB = np.random.rand(matrixSize, matrixSize)
 
     start = time.perf_counter()
 
     oldPercentageComplete = -1
-    I = 5000
+    iterations = 5000 #number of iterations
 
     for _ in range(3):
-        matC = np.dot(matA,matB) # warmup avoiding CPU frequency scaling issues
+        resultantMatrix = np.dot(matrixA,matrixB) # warmup avoiding CPU frequency scaling issues
 
-    gflopData = []
-    ticker = 0
+    recordedGFLOPS = []
 
-    for x in range(I):
-        startTemp = time.perf_counter_ns()
-        percentageComplete = (x/I)*100
+    iterationFLOPS = 0
+    iterationGFLOPS = 0
+
+    for iterationNo in range(iterations):
+        startTime = time.perf_counter_ns()
+        percentageComplete = (iterationNo/iterations)*100
 
         if int(round(oldPercentageComplete)) != int(round(percentageComplete)):
             clear()
@@ -520,72 +557,69 @@ def calculateGFLOPS(stageNo, coreCount):
             buffer.append(f"{colours.cyan()}Stage {stageNo}{colours.reset()} in progress...")
             buffer.append("[{}{}-sS{}] {}% Done".format(colours.grey(),3,colours.reset(),int(round(percentageComplete))))
 
-            try:
+            if iterationGFLOPS:
                 buffer.append("------")
                 buffer.append(f"{colours.green()}Stats{colours.reset()}:")
                 buffer.append("---")
-                buffer.append(f"{colours.magenta()}GFLOPs for last run{colours.reset()}: {round(flopTemp/1000000000,2)}")
+                buffer.append(f"{colours.magenta()}GFLOPs for last run{colours.reset()}: {iterationGFLOPS}")
                 print("\n".join(buffer))
-            except:
-                pass
 
         
         oldPercentageComplete = percentageComplete
 
-        matC = np.dot(matA, matB)  # Matrix multiplication
+        resultantMatrix = np.dot(matrixA, matrixB)  # Matrix multiplication
 
         endTemp = time.perf_counter_ns()
 
-        flopTemp = (2 * N**3) / (endTemp/1000000000 - startTemp/1000000000)
-        gflopTemp = flopTemp/1000000000
+        iterationFLOPS = (2 * matrixSize**3) / (endTemp/1000000000 - startTime/1000000000)
+        iterationGFLOPS = iterationFLOPS/1000000000
 
-        ticker +=1
 
-        gflopData.append(gflopTemp)
+        recordedGFLOPS.append(iterationGFLOPS)
 
     end = time.perf_counter()
 
     #compute the mean
-    gflopAvg = sum(gflopData)/len(gflopData)
+    averageGFLOPS = sum(recordedGFLOPS)/len(recordedGFLOPS)
 
     #calculate the standard deviation from the mean
     stdDeviationNumerator = 0
 
-    for item in gflopData:
-        value = (item-gflopAvg)**2
+    for dataPoint in recordedGFLOPS:
+        value = (dataPoint-averageGFLOPS)**2
         stdDeviationNumerator += value
     
-    stdDeviation = math.sqrt(stdDeviationNumerator/len(gflopData))
+    stdDeviation = math.sqrt(stdDeviationNumerator/len(recordedGFLOPS))
 
     #calculate the Z-score for each point
-    gflopNormalised = []
+    normalisedData = []
     discarded = []
-    for item in gflopData:
-        zScore = (item-gflopAvg)/(stdDeviation)
+    for dataPoint in recordedGFLOPS:
+        zScore = (dataPoint-averageGFLOPS)/(stdDeviation)
 
         if zScore < 2 and zScore > -2:
-            gflopNormalised.append(item)
+            normalisedData.append(dataPoint)
         else:
-            discarded.append(item)
+            discarded.append(dataPoint)
             pass # <-- too anomalous, discarded
 
-    gflopAvgNormalised = sum(gflopNormalised)/len(gflopNormalised)
-    percentDiscarded = (len(discarded)/len(gflopData))*100
+    averageGFLOPS = sum(normalisedData)/len(normalisedData)
+    percentDiscarded = (len(discarded)/len(recordedGFLOPS))*100
 
-    totalTime = end-start
-    avgTime = totalTime/6 #not avg but idgaf
+    #totalTime = end-start --- REMOVED DUE TO OBSOLESCENSE
+    #avgTime = totalTime/6
     
     #score = round((1/(avgTime/(3*math.e)))*(math.e)*(1000*(1/math.log(coreCount+6,10))))
 
     #timeList.append(totalTime)
     #scoreList.append(score)
 
-    flops = (2 * N**3) / ((end - start)/I)
+    FLOPS = (2 * matrixSize**3) / ((end - start)/iterations)
     
-    gflops = gflopAvgNormalised
+    GFLOPS = averageGFLOPS
 
-    cpu_freq = psutil.cpu_freq().current * 1e6
-    flop_per_cycle = (gflops * 1e9) / cpu_freq
+    cpuFrequency = psutil.cpu_freq().current * 1e6
+    operationsPerCycle = (GFLOPS * 1e9) / cpuFrequency
     
     #cpuTypeList = ["AVX", "AVX2", "SSE"]
     #cpuTypeFlop = [8,16,4]
@@ -593,43 +627,43 @@ def calculateGFLOPS(stageNo, coreCount):
     #index = min(range(len(cpuTypeFlop)), key=lambda i: abs(cpuTypeFlop[i] - flop_per_cycle))
     #cpuType = cpuTypeList[index]
 
-    print(f"{colours.cyan()}FLOP per cycle{colours.reset()}: {round(flop_per_cycle,2)}")
+    print(f"{colours.cyan()}FLOP per cycle{colours.reset()}: {round(operationsPerCycle,2)}")
     # print(f"{colours.green()}Estimated SIMD Instruction Set{colours.reset()}: {cpuType}")
     print("---")
-    print(f"{colours.magenta()}GFLOPs Performance{colours.reset()}: {round(gflops,2)}")
+    print(f"{colours.magenta()}GFLOPs Performance{colours.reset()}: {round(GFLOPS,2)}")
     print(f"{colours.green()}Stage {stageNo} complete{colours.reset()}.")
     print("------")
     print(f"{colours.cyan()}Discarded values: {percentDiscarded}%")
 
-    return round(gflops,2)
+    return round(GFLOPS,2)
 
 def singleCore(showResults):
-    global CPUs, fullTest
+    global systemCoreCount, fullTest
 
-    singleCoreCheck()
+    setSingleCoreAffinity()
 
     if dynamicMode == True:
-        coreCount = CPUs
+        testCoreCount = systemCoreCount
     else:
-        coreCount = 6
+        testCoreCount = 6
 
     scoreList = []
     timeList = []
 
     percentageComplete = 0
 
-    ballHeight = 5000
+    ballHeight = 5000 #metres
     
-    GFLUCTUATION = random.randint(-10,10)/10
-    ACCELERATION = 9.81+GFLUCTUATION
-    BOUNCECONSTANT = random.randint(1, 10)
+    gravitationalEntropy = random.randint(-10,10)/10
+    acceleration = 9.81+gravitationalEntropy
+    bounceConstant = random.randint(1, 10)
 
     timeSimulated = 0
     timeIncrement = 1e-6
     distanceTravelled = 0
 
 
-    timeToHit = math.sqrt(ballHeight/(0.5*ACCELERATION))
+    timeUntilCollision = math.sqrt(ballHeight/(0.5*acceleration))
 
     ticker = -1
 
@@ -647,7 +681,7 @@ def singleCore(showResults):
         roundStart = time.perf_counter()
         while distanceTravelled < ballHeight:
 
-            percentageComplete = ((math.sqrt(distanceTravelled) / math.sqrt(ballHeight)) * (100 / 3)) + ((100 / 3) * ticker)
+            percentageComplete = ((math.sqrt(distanceTravelled) / math.sqrt(ballHeight)) * (100 / 3)) + ((100 / 3) * ticker) #dividing by three due to the three stages
             percentageComplete = round(percentageComplete,0)
 
             if oldPercentageComplete != percentageComplete:
@@ -672,18 +706,18 @@ def singleCore(showResults):
 
             oldPercentageComplete = percentageComplete
 
-            yVel = yVel-timeIncrement*ACCELERATION
+            yVel = yVel-timeIncrement*acceleration
             timeSimulated+=timeIncrement
 
             
-            distanceTravelled = 0.5 * ACCELERATION * timeSimulated**2
+            distanceTravelled = 0.5 * acceleration * timeSimulated**2
 
-        yVel = -yVel - (BOUNCECONSTANT)
+        yVel = -yVel - (bounceConstant)
 
         timeList.append(timeSimulated)
 
         u = yVel
-        a = ACCELERATION
+        a = acceleration
 
         distanceTravelled = 0
         estimatedHeight =  (u**2)/(2*a)
@@ -692,14 +726,15 @@ def singleCore(showResults):
 
     totalTime = end-start
     avgTime = (end-start)/3
-    score = round((1/(avgTime/(3*math.e)))*(math.e)*(1000*(1/math.log(coreCount+4,10))))
+
+    score = round((1/(avgTime/(3*math.e)))*(math.e)*(1000*(1/math.log(testCoreCount+4,10))))
 
     allPassTimeAvg = sum(timeList)/3
     allPassTimeAvg = float(str(allPassTimeAvg).rstrip("0").rstrip("."))
 
     #Stage 1 algorithm end#
 
-    percentageAccuracy = 100.0 - (((allPassTimeAvg-timeToHit)/timeToHit) *100.0)
+    percentageAccuracy = 100.0 - (((allPassTimeAvg-timeUntilCollision)/timeUntilCollision) *100.0)
 
     print("---")
     print(f"{colours.green()}Stage 1 complete{colours.reset()}.")
@@ -716,8 +751,8 @@ def singleCore(showResults):
 
     arrowHeight = 5000
     
-    GFLUCTUATION = random.randint(-10,10)/10
-    ACCELERATION = 9.81+GFLUCTUATION
+    gravitationalEntropy = random.randint(-10,10)/10
+    acceleration = 9.81+gravitationalEntropy
 
     timeSimulated = 0
     timeIncrement = 1e-6
@@ -728,7 +763,7 @@ def singleCore(showResults):
     yVel = 0
     xVel = 50
 
-    timeToHit = math.sqrt(arrowHeight/(0.5*ACCELERATION))
+    timeUntilCollision = math.sqrt(arrowHeight/(0.5*acceleration))
 
     ticker = -1
 
@@ -774,10 +809,10 @@ def singleCore(showResults):
             
             oldPercentageComplete = percentageComplete
 
-            yVel = yVel - timeIncrement*ACCELERATION
+            yVel = yVel - timeIncrement*acceleration
 
             timeSimulated+=timeIncrement
-            yDistanceTravelled = 0.5 * ACCELERATION * timeSimulated**2
+            yDistanceTravelled = 0.5 * acceleration * timeSimulated**2
 
             xDistanceTravelled = xVel*timeSimulated
 
@@ -787,7 +822,7 @@ def singleCore(showResults):
 
     totalTime = end-start
     avgTime = (end-start)/3
-    score = round((1/(avgTime/(3*math.e)))*(math.e)*(1000*(1/math.log(coreCount+4,10))))
+    score = round((1/(avgTime/(3*math.e)))*(math.e)*(1000*(1/math.log(testCoreCount+4,10))))
 
     print("---")
     print(f"{colours.green()}Stage 2 complete{colours.reset()}.")
@@ -842,12 +877,12 @@ def multiCore(showResults):
     def intense1(threadNo, coreID):
         p = psutil.Process(os.getpid())
         p.cpu_affinity(coreID)
-        print("[{}{}-rC{}] Crunching numbers on core {}...".format(colours.cyan(), threadNo, colours.reset(), int(math.floor(coreID[0]/2))))
+        print("[{}{}-rC{}] Crunching numbers...".format(colours.cyan(), colours.reset(), int(math.floor(coreID[0]/2))))
 
         arrowHeight = 500
         
-        GFLUCTUATION = random.randint(-10,10)/10
-        ACCELERATION = 9.81+GFLUCTUATION
+        gravitationalEntropy = random.randint(-10,10)/10
+        ACCELERATION = 9.81+gravitationalEntropy
 
         timeSimulated = 0
         timeIncrement = 1e-6
@@ -876,7 +911,7 @@ def multiCore(showResults):
     
     #checks for dynamic mode
     if dynamicMode == True:
-        coreCount = int(CPUs)
+        coreCount = int(systemCoreCount)
     else:
         coreCount = 6
 
@@ -889,12 +924,12 @@ def multiCore(showResults):
 
 
     def run_processes():
-        global coreCount, CPUs, coreContext
+        global testCoreCount, systemCoreCount, coreContext
 
         if dynamicMode:
-            coreCount = os.cpu_count()
+            testCoreCount = os.cpu_count()
         else:
-            coreCount = 12
+            testCoreCount = 12
 
         processes = []
 
@@ -904,9 +939,9 @@ def multiCore(showResults):
 
         # if any core ID is invalid (>= logical), fallback
         if any(core >= logical for core in coreList):
-            coreList = list(range(CPUs))
+            coreList = list(range(systemCoreCount))
 
-        for i in range(coreCount//2):
+        for i in range(testCoreCount//2):
             coreRun = coreList[i%len(coreList)]
 
             p = multiprocessing.Process(target=intense1, args=(i + 1, [coreRun]))
@@ -972,26 +1007,26 @@ def multiThread(showResults):
     def intense1(procNo, timeList, core_id, core_show, thread_id, thread_pass):
         p = psutil.Process(os.getpid())
         p.cpu_affinity([core_id])  # Pin this process to specific core
-        print(f"[{colours.magenta()}{procNo}-rT{colours.reset()}-{colours.magenta()}[p]{thread_pass}{colours.reset()}] Crunching numbers on core [{core_show}] thread [{thread_id}]...")
+        print(f"[{colours.magenta()}{procNo}-rT{colours.reset()}-{colours.magenta()}[p]{thread_pass}{colours.reset()}] Crunching numbers...")
         ballHeight = 250
-        ACCELERATION = 9.81 + random.randint(-10, 10) / 10
-        BOUNCECONSTANT = random.randint(1, 10)
+        acceleration = 9.81 + random.randint(-10, 10) / 10
+        ballConstant = random.randint(1, 10)
         timeSimulated = 0
         timeIncrement = 1e-6
         distanceTravelled = 0
         yVel = 0
         while distanceTravelled < ballHeight:
-            yVel -= timeIncrement * ACCELERATION
+            yVel -= timeIncrement * acceleration
             timeSimulated += timeIncrement
-            distanceTravelled = 0.5 * ACCELERATION * timeSimulated**2
-        yVel = -yVel - BOUNCECONSTANT
+            distanceTravelled = 0.5 * acceleration * timeSimulated**2
+        yVel = -yVel - ballConstant
         timeList.append(timeSimulated)
         print(f"[{colours.green()}{procNo}-cT{colours.reset()}] Instance complete!")
 
     def intense2(procNo, timeList, core_id, core_show, thread_id, thread_pass):
         p = psutil.Process(os.getpid())
         p.cpu_affinity([core_id])  # Pin this process to specific core
-        print(f"[{colours.magenta()}{procNo}-rT{colours.reset()}-{colours.magenta()}[p]{thread_pass}{colours.reset()}] Crunching numbers on core [{core_show}] thread [{thread_id}]...")
+        print(f"[{colours.magenta()}{procNo}-rT{colours.reset()}-{colours.magenta()}[p]{thread_pass}{colours.reset()}] Crunching numbers...") # on core [{core_show}] thread [{thread_id}]
         arrowHeight = 250
         ACCELERATION = 9.81 + random.randint(-10, 10) / 10
         timeSimulated = 0
@@ -1095,7 +1130,7 @@ def multiThread(showResults):
 
 
 def fullCPUTest():
-    global fullTest, brandName, version, distroName, CPUs, Threads
+    global fullTest, brandName, version, distroName, systemCoreCount, Threads
 
     fullTest = True
 
@@ -1227,7 +1262,7 @@ def fullCPUTest():
 
     ##Now we attempt to connect to the database
     if not dynamicMode and apikey:
-        upload_and_return_status(brandName, CPUs, Threads, memRaw, singleCoreScore, multiCoreScore, multiThreadScore, gflops, finalScore, distroName, version, apikey)
+        upload_and_return_status(brandName, systemCoreCount, Threads, memRaw, singleCoreScore, multiCoreScore, multiThreadScore, gflops, finalScore, distroName, version, apikey)
 
 def test_speed():
     try:
@@ -1258,8 +1293,6 @@ def test_speed():
         st.get_best_server()
         
         for x in range(0,3):
-            
-    
             print(f"[{colours.cyan()}IS{colours.reset()}] Running download test...")
             download = st.download()/1e+6
             downloads.append(download)
@@ -1296,32 +1329,6 @@ def test_speed():
         f.close()
 
 
-# Initiation
-
-apikey = return_api_key()
-
-if not apikey:
-    request_api_key()
-    clear()
-
-apikey = return_api_key()
-
-if is_connected and apikey:
-    text = f"{colours.green()}Online{colours.reset()}"
-else:
-    text = f"{colours.grey()}Offline{colours.reset()}"
-
-if dynamicMode == True:
-    print(f"{colours.grey()}DYNAMIC MODE IS ON{colours.reset()}")
-    print("------")
-print(f"Welcome back, {colours.green()}{user}{colours.reset()}!")
-print(f"Version: {colours.grey()}{version}{colours.reset()}")
-print("---")
-print(text)
-
-
-prettyPrintData()
-
 if osName.lower() in ["nt", "dos", "windows"]:
     coreContext = multiprocessing.get_context("spawn")
     #Set process priority
@@ -1332,6 +1339,69 @@ if osName.lower() in ["nt", "dos", "windows"]:
 else:
     coreContext = multiprocessing.get_context("fork")
 
+# Initiation
+
+apikey = return_api_key()
+
+if not apikey:
+    request_api_key()
+    clear()
+
+apikey = return_api_key()
+
+def get_latest_release(owner, repo):
+    url = f"https://api.github.com/repos/{owner}/{repo}/releases/latest"
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        data = response.json()
+        return data['tag_name']
+    elif response.status_code == 404:
+        return "No releases found or repository does not exist."
+    else:
+        return f"Error: {response.status_code}"
+
+def check_is_latest_version(version):
+    versionTag = version.replace(".", "")
+
+    latestTag = get_latest_release("TriTechX", "corebench")
+    latestVersion = latestTag.replace("CoreBench", "")
+    #print(latestTag, latestVersion, ".".join(latestVersion))
+
+    if versionTag == latestVersion:
+        return True, ".".join(latestVersion)
+    else:
+        return False, ".".join(latestVersion)
+    
+def showHome():
+    global version
+    clear()
+    apikey = return_api_key()
+    if is_connected() and apikey:
+        response = apiCheck(apikey)
+        try:
+            message = "- " + response.json()["isValid"]
+        except:
+            message = ""
+        
+        text = f"{colours.green()}Online{colours.reset()} {message}"
+        isLatest, latestVersion = check_is_latest_version(version)
+        text = text+"" if isLatest else text+f"\n{colours.grey()}Your version of CoreBench is {colours.red()}outdated{colours.grey()}. Please update to v{latestVersion} to upload your results."
+    else:
+        text = f"{colours.grey()}Offline{colours.reset()}"
+
+    if dynamicMode == True:
+        print(f"{colours.grey()}DYNAMIC MODE IS ON{colours.reset()}")
+        print("------")
+    print(f"Welcome back, {colours.green()}{user}{colours.reset()}!")
+    print(f"Version: {colours.grey()}{version}{colours.reset()}")
+    print("---")
+    print(text)
+
+
+    prettyPrintData()
+
+showHome()
 
 while True:
     apikey = return_api_key()
@@ -1363,7 +1433,7 @@ while True:
     n - internet speed
     api - set api key
     '''
-    validChoice = ["sc", "st", "mc", "mt", "nic", "n", "fullc", "fc", "api"]
+    validChoice = ["sc", "st", "mc", "mt", "nic", "n", "fullc", "fc", "api", "home"]
     otherChoice = ["exit", "quit", "clear"]
     validArgs = ["d"]
     valid = False
@@ -1469,6 +1539,8 @@ while True:
             index = 4
         elif base == "api":
             index = 5
+        elif base == "home":
+            index = 6
         
         try:
             if index == 0:
@@ -1493,6 +1565,9 @@ while True:
                 prettyPrintData()
             elif index == 5:
                 request_api_key()
+
+            elif index == 6:
+                showHome()
             else:
                 pass
                 #print(f"{colours.red()}Invalid command{colours.reset()}")
