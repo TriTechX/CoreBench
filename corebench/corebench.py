@@ -60,16 +60,15 @@ def write_api_key(key):
     with open("apikey.txt", "w") as f:
         f.write(key)
 
-#cb115194c545b47fcd8ecab166bf288e89b6f73402544947e2d13fa14faceb9c
+#IF YOU ARE SEEING THIS IT WORKS
+
 def get_file_hash():
     sha256 = hashlib.sha256()
     filename = os.path.abspath(__file__)
 
-    with open(filename, "r") as f:
-        file_text = f.read()
-
-    file_bytes = file_text.encode("utf-8")
-    sha256.update(file_bytes)
+    with open(filename, 'rb') as f:
+        file_bytes = f.read()
+        sha256.update(file_bytes)
 
     return sha256.hexdigest()
 
