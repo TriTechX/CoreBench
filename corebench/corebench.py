@@ -60,7 +60,7 @@ def write_api_key(key):
     with open("apikey.txt", "w") as f:
         f.write(key)
 
-#IF YOU ARE SEEING THIS IT WORKS MULTIPLIED BY FIVE
+#IF YOU ARE SEEING THIS IT WORKS MULTIPLIED BY SIX
 
 def get_file_hash():
     sha256 = hashlib.sha256()
