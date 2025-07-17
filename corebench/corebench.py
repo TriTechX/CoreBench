@@ -6,7 +6,6 @@ import multiprocessing
 import threading
 import math
 import platform
-import ctypes
 import random
 from datetime import datetime
 import subprocess
