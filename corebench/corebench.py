@@ -304,7 +304,7 @@ def getData():
             quit()
             
         #UPDATE THIS WITH EVERY VERSION
-        version = "1.4.6"
+        version = "1.4.8"
         #UPDATE THIS WITH EVERY VERSION
         
         endLoad = True
@@ -875,7 +875,7 @@ def multiCore(showResults):
     def intense1(threadNo, coreID):
         p = psutil.Process(os.getpid())
         p.cpu_affinity(coreID)
-        print("[{}{}-rC{}] Crunching numbers...".format(colours.cyan(), colours.reset(), int(math.floor(coreID[0]/2))))
+        print("[{}{}-rC{}] Crunching numbers...".format(colours.cyan(), threadNo, colours.reset()))
 
         arrowHeight = 500
         
