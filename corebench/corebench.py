@@ -304,7 +304,7 @@ def getData():
             quit()
             
         #UPDATE THIS WITH EVERY VERSION
-        version = "1.4.6"
+        version = "1.4.7"
         #UPDATE THIS WITH EVERY VERSION
         
         endLoad = True
@@ -1353,23 +1353,25 @@ def get_latest_release(owner, repo):
     
     if response.status_code == 200:
         data = response.json()
-        return data['tag_name']
+        return data['tag_name'], True
     elif response.status_code == 404:
-        return "No releases found or repository does not exist."
+        return "No releases found or repository does not exist.", False
     else:
-        return f"Error: {response.status_code}"
+        return f"Error: {response.status_code}", False
 
 def check_is_latest_version(version):
     versionTag = version.replace(".", "")
 
-    latestTag = get_latest_release("TriTechX", "corebench")
+    latestTag, serverUp = get_latest_release("TriTechX", "corebench")
     latestVersion = latestTag.replace("CoreBench", "")
     #print(latestTag, latestVersion, ".".join(latestVersion))
 
-    if versionTag == latestVersion:
+    if versionTag == latestVersion and serverUp:
         return True, ".".join(latestVersion)
-    else:
+    elif serverUp:
         return False, ".".join(latestVersion)
+    elif not serverUp:
+        return False, latestVersion
     
 def showHome():
     global version
@@ -1384,7 +1386,10 @@ def showHome():
         
         text = f"{colours.green()}Online{colours.reset()} {message}"
         isLatest, latestVersion = check_is_latest_version(version)
-        text = text+"" if isLatest else text+f"\n{colours.grey()}Your version of CoreBench is {colours.red()}outdated{colours.grey()}. Please update to v{latestVersion} to upload your results."
+        if "error" not in latestVersion.lower():    
+            text = text+"" if isLatest else text+f"\n{colours.grey()}Your version of CoreBench is {colours.red()}outdated{colours.grey()}. Please update to v{latestVersion} to upload your results."
+        else:
+            text = text + f"\n{colours.grey()}The server did not respond. Results may not be submitted.{colours.reset()}"
     else:
         text = f"{colours.grey()}Offline{colours.reset()}"
 
