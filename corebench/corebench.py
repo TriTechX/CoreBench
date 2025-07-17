@@ -1353,23 +1353,23 @@ def get_latest_release(owner, repo):
     
     if response.status_code == 200:
         data = response.json()
-        return data['tag_name']
+        return data['tag_name'], response.status_code
     elif response.status_code == 404:
-        return "No releases found or repository does not exist."
+        return "No releases found or repository does not exist.", response.status_code
     else:
-        return f"Error: {response.status_code}"
+        return f"Error: {response.status_code}", response.status_code
 
 def check_is_latest_version(version):
     versionTag = version.replace(".", "")
 
-    latestTag = get_latest_release("TriTechX", "corebench")
+    latestTag, error = get_latest_release("TriTechX", "corebench")
     latestVersion = latestTag.replace("CoreBench", "")
     #print(latestTag, latestVersion, ".".join(latestVersion))
 
     if versionTag == latestVersion:
-        return True, ".".join(latestVersion)
+        return True, ".".join(latestVersion), error
     else:
-        return False, ".".join(latestVersion)
+        return False, ".".join(latestVersion), error
     
 def showHome():
     global version
@@ -1383,8 +1383,11 @@ def showHome():
             message = ""
         
         text = f"{colours.green()}Online{colours.reset()} {message}"
-        isLatest, latestVersion = check_is_latest_version(version)
-        text = text+"" if isLatest else text+f"\n{colours.grey()}Your version of CoreBench is {colours.red()}outdated{colours.grey()}. Please update to v{latestVersion} to upload your results."
+        isLatest, latestVersion, error = check_is_latest_version(version)
+        if error != 403:
+            text = text+"" if isLatest else text+f"\n{colours.grey()}Your version of CoreBench is {colours.red()}outdated{colours.grey()}. Please update to v{latestVersion} to upload your results."
+        else:
+            text = text+f"\n{colours.grey()}You are being rate-limited by GitHub API.{colours.reset()}"
     else:
         text = f"{colours.grey()}Offline{colours.reset()}"
 
