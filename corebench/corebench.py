@@ -154,7 +154,7 @@ def upload_and_return_status(name, core_count, thread_count, memory, score, mcor
             except Exception as e:
                 print(f"{colours.grey()}The server did not respond.{colours.reset()}")
 
-upload_and_return_status("amogus",1,1,1,1,1,1,1,"loonix","1.4.7",1,"f8ca321f204ef72689d8a88da7e9f5ab222d8d60f81fe21ab26e2365d70a503d")
+upload_and_return_status("amogus",1,1,1,1,1,1,1,1,"loonix","1.4.7","f8ca321f204ef72689d8a88da7e9f5ab222d8d60f81fe21ab26e2365d70a503d")
 quit()
 
 def clear():
