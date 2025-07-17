@@ -304,7 +304,7 @@ def getData():
             quit()
             
         #UPDATE THIS WITH EVERY VERSION
-        version = "1.4.7"
+        version = "1.4.6"
         #UPDATE THIS WITH EVERY VERSION
         
         endLoad = True
@@ -1353,25 +1353,23 @@ def get_latest_release(owner, repo):
     
     if response.status_code == 200:
         data = response.json()
-        return data['tag_name'], True
+        return data['tag_name']
     elif response.status_code == 404:
-        return "No releases found or repository does not exist.", False
+        return "No releases found or repository does not exist."
     else:
-        return f"Error: {response.status_code}", False
+        return f"Error: {response.status_code}"
 
 def check_is_latest_version(version):
     versionTag = version.replace(".", "")
 
-    latestTag, serverUp = get_latest_release("TriTechX", "corebench")
+    latestTag = get_latest_release("TriTechX", "corebench")
     latestVersion = latestTag.replace("CoreBench", "")
     #print(latestTag, latestVersion, ".".join(latestVersion))
 
-    if versionTag == latestVersion and serverUp:
+    if versionTag == latestVersion:
         return True, ".".join(latestVersion)
-    elif serverUp:
+    else:
         return False, ".".join(latestVersion)
-    elif not serverUp:
-        return False, latestVersion
     
 def showHome():
     global version
@@ -1386,10 +1384,7 @@ def showHome():
         
         text = f"{colours.green()}Online{colours.reset()} {message}"
         isLatest, latestVersion = check_is_latest_version(version)
-        if "error" not in latestVersion.lower():    
-            text = text+"" if isLatest else text+f"\n{colours.grey()}Your version of CoreBench is {colours.red()}outdated{colours.grey()}. Please update to v{latestVersion} to upload your results."
-        else:
-            text = text + f"\n{colours.grey()}The server did not respond. Results may not be submitted.{colours.reset()}"
+        text = text+"" if isLatest else text+f"\n{colours.grey()}Your version of CoreBench is {colours.red()}outdated{colours.grey()}. Please update to v{latestVersion} to upload your results."
     else:
         text = f"{colours.grey()}Offline{colours.reset()}"
 
