@@ -59,15 +59,16 @@ def write_api_key(key):
     with open("apikey.txt", "w") as f:
         f.write(key)
 
-#IF YOU ARE SEEING THIS IT WORKS MULTIPLIED BY SIX
-
 def get_file_hash():
     sha256 = hashlib.sha256()
     filename = os.path.abspath(__file__)
 
     with open(filename, 'rb') as f:
         file_bytes = f.read()
-        sha256.update(file_bytes)
+
+    file_text = file_bytes.decode('utf-8')
+    normalized_text = file_text.replace('\r\n', '\n').rstrip('\n')
+    sha256.update(normalized_text.encode('utf-8'))
 
     return sha256.hexdigest()
 
@@ -304,7 +305,7 @@ def getData():
             quit()
             
         #UPDATE THIS WITH EVERY VERSION
-        version = "1.4.8"
+        version = "1.4.9"
         #UPDATE THIS WITH EVERY VERSION
         
         endLoad = True
