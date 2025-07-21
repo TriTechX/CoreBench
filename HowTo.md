@@ -1,14 +1,15 @@
 # How To Use CoreBench
 ## Basic Installation
 
-Run the following command in your terminal, when the current directory is the file in which ```main.py``` is located.
+Run the following command in your terminal, when the current directory is the file in which ```corebench.py``` is located.
 ```bash
-sudo apt install neofetch && sudo apt update && sudo apt install python3-pip && pip install -r requirements.txt
+sudo apt update && sudo apt install neofetch && sudo apt install python3-pip && pip install -r requirements.txt
 ```
+
 This will install the dependencies prepare CoreBench for execution.<br>
-To run CoreBench when in the directory in which ```main.py``` is located, just run
+To run CoreBench when in the directory in which ```corebench.py``` is located, just run
 ```bash
-python main.py
+python3 corebench.py
 ```
 
 ## Use Instructions
@@ -22,7 +23,8 @@ mt - multithread
 mc - multicore
 fullc OR fc - full CPU benchmark
 nic OR n - network
+home - view the home, check client status
+api - change the API key
 ```
 
-Currently, the only argument is "d", which runs the test in "Dynamic Mode" which scales the scores and tests based on how many cores and threads are in your processor.<br>
-Use example: ```mc -d```, runs the single core test in dynamic mode.
+Using the argument `-d` will run the test in dynamic mode. Putting `*x` after the base will run that test `x` times. 
