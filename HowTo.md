@@ -30,4 +30,4 @@ api - change the API key
 Using the argument `-d` will run the test in dynamic mode. Putting `*x` after the base will run that test `x` times. 
 
 
-> Note: to upload scores to the website, you must have a valid API key - obtained through the website itself - and you must run the **full CPU test** - `fc`
+> Note: to upload scores to the website, you must have a valid API key - obtained through the website itself - and you must run the **full CPU test** - `fc` - WITHOUT dynamic mode.
