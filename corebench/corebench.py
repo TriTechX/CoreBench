@@ -72,7 +72,7 @@ def get_file_hash():
 
     return sha256.hexdigest()
 
-def sendForAuth(cpu_name, core_count, thread_count, ram, single, mcore, mthread, gflops, full, os_name, version, key):
+def sendForAuth(cpu_name, core_count, thread_count, ram, single, mcore, mthread, gflops, fullLoad, full, os_name, version, key):
     server_ip = "https://submit.corebench.me/submit"
 
     headers = {
@@ -90,6 +90,7 @@ def sendForAuth(cpu_name, core_count, thread_count, ram, single, mcore, mthread,
             "multi_core": mcore,
             "multi_thread": mthread,
             "gflops": gflops,
+            "full_load": fullLoad,
             "overall_score": full,
             "os_name": os_name,
             "version": version
@@ -122,6 +123,7 @@ def apiCheck(apiKey):
             "multi_core": "",
             "multi_thread": "",
             "gflops": "",
+            "full_load": "",
             "overall_score": "",
             "os_name": "",
             "version": ""
@@ -137,9 +139,9 @@ def apiCheck(apiKey):
     response = requests.post(server_ip, json=data, headers=headers)    
     return response
 
-def upload_and_return_status(name, core_count, thread_count, memory, score, mcore, mthread, gflops, final, distro, version, key):
+def upload_and_return_status(name, core_count, thread_count, memory, score, mcore, mthread, gflops, fullLoad, final, distro, version, key):
             try:
-                response = sendForAuth(name, core_count, thread_count, memory, score, mcore, mthread, gflops, final, distro, version, key)
+                response = sendForAuth(name, core_count, thread_count, memory, score, mcore, mthread, gflops, fullLoad, final, distro, version, key)
                 status_code = response.status_code
                 message = response.text
 
@@ -305,7 +307,7 @@ def getData():
             quit()
             
         #UPDATE THIS WITH EVERY VERSION
-        version = "1.4.9"
+        version = "1.5.0"
         #UPDATE THIS WITH EVERY VERSION
         
         endLoad = True
@@ -326,7 +328,7 @@ def loadingScreen():
                     f"Eating all {memRaw}MB of RAM...", "Overclocking...", "Deleting main.py...", "Always remember to remove the French language pack!", 
                     f"Not much of a {osName} fan myself, but you do you...", f"Welcome back {hostname}.", f"Haha! Got your IP! Seriously! {localIp}", "I use Arch btw",
                     "I use Core btw", "Over 6GHz!", "Bringing out the Intel Pentium...", "Gathering texel fillrate...", "Collecting frames...", "No fake frames here!",
-                        "Changing boot order...", "Imagine if you were using this on Windows lol", "Still held prisoner by Replit.", "It's dangerous to go alone.", 
+                        "Changing boot order...", "Imagine if you were using this on Windows lol", "No longer held prisoner by Replit!", "It's dangerous to go alone.", 
                         "All your bench are belong to us.", "GPU bench coming soon. Maybe.", "Unused RAM is useless RAM. Give some to me."]
     message = messages[random.randint(0,len(messages)-1)]
 
@@ -872,6 +874,98 @@ def get_physical_core_ids():
     
     return sorted(physical_cores.values())
 
+#Full Load Test SUBROUTINES
+def fp_benchmark(data_chunk):
+    total = 0
+
+    for i in data_chunk:
+        if i == 0:
+            continue #funny bug lol
+
+        total += math.sin(i) * math.cos(i) + \
+                 math.log(i + 1) * math.sqrt(i) + \
+                 math.exp(i % 10) + \
+                 math.factorial(i % 10) + \
+                 math.tan(i / 3) * math.atan(i / 2) + \
+                 math.pow(i, 2) + \
+                 math.sqrt(math.fabs(math.sin(i))) + \
+                 math.log(math.fabs(math.cos(i) + 1)) + \
+                 math.sin(i * 2) * math.cos(i * 2)
+
+    return total
+
+def full_load_benchmark(func, data, num_cores, iterations=5):
+    times = []
+    chunk_size = len(data) // num_cores
+
+    chunks = [data[i * chunk_size:(i + 1) * chunk_size] for i in range(num_cores)]
+
+    #chunks = [
+    #    data[0:250],  # Chunk for core 0
+    #    data[250:500],  # Chunk for core 1
+    #    data[500:750],  # Chunk for core 2
+    #   data[750:1000]   # Chunk for core 3
+    #]
+
+    for _ in range(iterations):
+        start_time = time.perf_counter()
+
+        with multiprocessing.Pool(processes=num_cores) as pool:
+            results = pool.map(func, chunks)
+
+        end_time = time.perf_counter()
+
+        times.append(end_time - start_time)
+
+    return sum(times) / len(times)
+
+def run_full_load_benchmark(num_cores, data, iterations=5):
+    chunk_size = len(data) // num_cores
+    chunks = [data[i * chunk_size:(i + 1) * chunk_size] for i in range(num_cores)]
+
+    with multiprocessing.Pool(processes=num_cores) as pool:
+        avg_time = full_load_benchmark(fp_benchmark, data, iterations)
+        return avg_time
+
+def full_load_intermission(gflops=0):
+    if "AMD" in brandName:
+        cpuColour = colours.red()
+    elif "Intel" in brandName:
+        cpuColour = colours.cyan()
+    else:
+        cpuColour = colours.magenta()
+
+    print(f"Your {cpuColour}{colours.bold()}{brandName}{colours.reset()} has {colours.green()}completed{colours.reset()} the {colours.cyan()}GFLOPs Performance Test{colours.reset()} with a score of {colours.cyan()}{gflops} GFLOPs{colours.reset()}.")
+    print("------")
+    print(f"Next stage: {colours.red()}Full Load Test{colours.reset()}.")
+
+    for x in range(0,3):
+        print(f"{3-x}", end="", flush=True)
+
+        if 3-x > 1:
+            print(", ", end="", flush=True)
+        else:
+            print("...")
+
+        time.sleep(1)
+
+    print("------") 
+    print(f"Currently executing the {colours.red()}Full Load Test{colours.reset()}, this shouldn't take long...")
+
+    data = list(range(5_000_000))
+    num_cores = multiprocessing.cpu_count()
+    avg_time = run_full_load_benchmark(num_cores, data)
+
+    score = round((2 / avg_time) * 1000 / math.log(avg_time + math.e))
+
+    print(f"Your system scored {colours.red()}{score}{colours.reset()} points!")
+    print("------")
+    print(f"{colours.green()}Full Load Test complete!{colours.reset()}")
+    time.sleep(3)
+
+    return score
+#Full Load Test SUBROUTINES END
+
 def multiCore(showResults):     
     def intense1(threadNo, coreID):
         p = psutil.Process(os.getpid())
@@ -975,7 +1069,8 @@ def multiCore(showResults):
     gflops = calculateGFLOPS("2", coreCount)
     time.sleep(3)
     clear()
- 
+    full_load_score = full_load_intermission(gflops=gflops)
+    clear()
 
     if not dynamicMode and not fullTest:
         data = [["", score, "", ""]]
@@ -994,8 +1089,9 @@ def multiCore(showResults):
         print(f"{colours.cyan()}Multi core score{colours.reset()}: {score} points")
         print("---")
         print(f"{colours.green()}Floating point operations performance{colours.reset()}: {round(gflops,2)} GFLOPs")
+        print(f"{colours.red()}Full Load Test score{colours.reset()}: {full_load_score} points")
 
-    return score, gflops
+    return score, gflops, full_load_score
 
 
 def multiThread(showResults):
@@ -1151,7 +1247,7 @@ def fullCPUTest():
         
     singleCoreScore = singleCore(False)
     coolDown(singleCoreScore)
-    multiCoreScore, gflops = multiCore(False)
+    multiCoreScore, gflops, fullLoadScore = multiCore(False)
     coolDown(multiCoreScore)
     multiThreadScore = multiThread(False)
 
@@ -1261,7 +1357,7 @@ def fullCPUTest():
 
     ##Now we attempt to connect to the database
     if not dynamicMode and apikey:
-        upload_and_return_status(brandName, systemCoreCount, Threads, memRaw, singleCoreScore, multiCoreScore, multiThreadScore, gflops, finalScore, distroName, version, apikey)
+        upload_and_return_status(brandName, systemCoreCount, Threads, memRaw, singleCoreScore, multiCoreScore, multiThreadScore, gflops, fullLoadScore, finalScore, distroName, version, apikey)
 
 def test_speed():
     try:
