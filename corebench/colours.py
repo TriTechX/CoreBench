@@ -18,6 +18,9 @@ def magenta():
 
 def cyan():
     return "\033[96m"
+    
+def bold():
+    return "\033[1m"
 
 def white():
     return "\033[37m"
