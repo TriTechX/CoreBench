@@ -38,7 +38,7 @@ homedir = os.getcwd()
 
 def is_connected():
     try:
-        response = requests.get("https://www.google.com", timeout=5)
+        response = requests.get("https://corebench.me", timeout=5)
         if response.status_code == 200:
             return True
         
@@ -307,7 +307,7 @@ def getData():
             quit()
             
         #UPDATE THIS WITH EVERY VERSION
-        version = "1.5.1"
+        version = "1.5.2"
         #UPDATE THIS WITH EVERY VERSION
         
         endLoad = True
@@ -894,7 +894,7 @@ def fp_benchmark(data_chunk):
 
     return total
 
-def full_load_benchmark(func, data, num_cores, iterations=5):
+def full_load_benchmark(func, data, num_cores, iterations=50):
     times = []
     chunk_size = len(data) // num_cores
 
@@ -908,6 +908,7 @@ def full_load_benchmark(func, data, num_cores, iterations=5):
     #]
 
     for _ in range(iterations):
+        print(f"[{_+1}] {colours.red()}Iteration START{colours.reset()} ({int(round(((_+1)/iterations)*100))}%)")
         start_time = time.perf_counter()
 
         with multiprocessing.Pool(processes=num_cores) as pool:
@@ -919,12 +920,12 @@ def full_load_benchmark(func, data, num_cores, iterations=5):
 
     return sum(times) / len(times)
 
-def run_full_load_benchmark(num_cores, data, iterations=5):
+def run_full_load_benchmark(num_cores, data):
     chunk_size = len(data) // num_cores
     chunks = [data[i * chunk_size:(i + 1) * chunk_size] for i in range(num_cores)]
 
     with multiprocessing.Pool(processes=num_cores) as pool:
-        avg_time = full_load_benchmark(fp_benchmark, data, iterations)
+        avg_time = full_load_benchmark(fp_benchmark, data, num_cores)
         return avg_time
 
 def full_load_intermission(gflops=0):
@@ -950,13 +951,16 @@ def full_load_intermission(gflops=0):
         time.sleep(1)
 
     print("------") 
-    print(f"Currently executing the {colours.red()}Full Load Test{colours.reset()}, this shouldn't take long...")
+    print(f"Currently executing the {colours.red()}Full Load Test{colours.reset()}, this may take a while...")
+    print("---")
 
     data = list(range(5_000_000))
     num_cores = multiprocessing.cpu_count()
     avg_time = run_full_load_benchmark(num_cores, data)
 
     score = round((2 / avg_time) * 1000 / math.log(avg_time + math.e))
+
+    print("---")
 
     print(f"Your system scored {colours.red()}{score}{colours.reset()} points!")
     print("------")
