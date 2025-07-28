@@ -5,10 +5,6 @@
 - Multithreaded CPU performance (Multiple threads on one core)
 - Multicore CPU performance (1 thread per core)
 
-## Then, if applicable:
-
-- GPU performance
-
 ### And then finally retrieve all system information, inculding:
 - Operating system
 - RAM quantity
@@ -16,7 +12,7 @@
 - GPU brand and name
 - System name (hostname)
 
-This bench is more accurate on lower-end systems running Core. High end systems may achieve very fluctuating results. 
+This benchmark is aimed at a general consumer/PC enthusiast market, it may not be useful for companies with large-scale servers.
 
 ### When running CoreBench, you agree to the following:
 
