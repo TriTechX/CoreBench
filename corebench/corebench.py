@@ -307,7 +307,7 @@ def getData():
             quit()
             
         #UPDATE THIS WITH EVERY VERSION
-        version = "1.5.2"
+        version = "1.5.3"
         #UPDATE THIS WITH EVERY VERSION
         
         endLoad = True
@@ -1546,21 +1546,26 @@ while True:
         multiArgs = False
         skip = False
         
-        choice = input("=> ")
-        choice = choice.lower().strip(" ")
+        selection = input("=> ")
+        selection = selection.lower().strip(" ")
 
         # Handle case for *x syntax
-        if "*" in choice:
-            num_part = choice.split(" ")[0]
-            num = int(num_part.strip("*"))
-            choice = choice[len(num_part):].strip()  # Remove the *x part
+        if "*" in selection:
+            choice, num = selection.split("*")[0].strip(), selection.split("*")[1].strip()
+            
+            try:
+                num = int(num.strip())
+            except:
+                num = int(re.sub(r"-\s*d", "", num.strip()))
         else:
+            choice = selection.split("-")[0].strip() if "-" in selection else selection
             num = 1  # Default to 1 if no *x syntax is used
 
-        if choice in otherChoice:
-            if choice == "exit" or choice == "quit":
+        if selection in otherChoice:
+            if selection == "exit" or selection == "quit":
                 quit()
-            elif choice == "clear":
+
+            elif selection == "clear":
                 print(f"Are you sure you want to {colours.red()}clear ALL data{colours.reset()}? (y/n)")
                 confirm = input("=> ")
 
@@ -1580,15 +1585,19 @@ while True:
                     print(f"{colours.green()}Data cleared{colours.reset()}.")
                 else:
                     print(f"{colours.red()}Data not cleared{colours.reset()}.")
+                    
         else:
             try:
                 # Checks to see if it contains args
                 try:
-                    choice, args = choice.split(" -")
+                    args = selection.split(" -")[1]
                 except:
-                    choice, args = choice.split("-")
+                    args = selection.split("-")[1]
+                finally:
+                    pass
                     
                 multiArgs = True
+
                 if choice in validChoice:
                     skip = False
                 else:
@@ -1608,10 +1617,12 @@ while True:
                     dynamicMode = False
                     valid = True
                     # Checks for correct base but no args
+
                 elif args == "d":
                     dynamicMode = True
                     valid = True
                     # Dynamic mode
+                    
                 else:
                     dynamicMode = False
                     valid = False
@@ -1619,13 +1630,13 @@ while True:
 
             else:
                 valid = False
-                if choice.strip(" ") != "":
+                if selection.strip(" ") != "":
                     print(f"{colours.red()}Invalid command{colours.reset()}")
                 else:
                     clear()
                     print(f"Please enter the {colours.magenta()}test command{colours.reset()}.")
                 # Invalid base
-
+    
         base = choice
         index = -1  # Initialize index with a default value
         
