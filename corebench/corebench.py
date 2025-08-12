@@ -3,6 +3,7 @@ import time
 import os
 import socket
 import multiprocessing
+multiprocessing.set_start_method("fork")
 import threading
 import math
 import platform
@@ -15,6 +16,8 @@ import csv
 import sys
 import shutil
 import hashlib
+import queue
+
 #Third-party packages
 import cpuinfo
 import psutil
@@ -153,6 +156,9 @@ def upload_and_return_status(name, core_count, thread_count, memory, score, mcor
                     print(f"{colours.red()}{response.json()['detail']}{colours.reset()}")
                 else:
                     print(f"{colours.red()}{response.json()['detail']}{colours.reset()}")
+
+                return response.json()['detail']
+
             except Exception as e:
                 print(f"{colours.grey()}The server did not respond.{colours.reset()}")
 
@@ -163,18 +169,22 @@ def clear():
 def request_api_key():
     clear()
     print(f"{colours.red()}No API key was found for this machine.\n{colours.reset()}Please enter your key: {colours.reset()}")
-    print(f"{colours.grey()}Without an API key, benchmark results cannot be uploaded to the database. You can obtain your API key from creating an account on the CoreBench website. Press [ENTER] to ignore this message and proceed as usual without connecting to the internet.{colours.reset()}")
+    print(f"{colours.grey()}Without an API key, benchmark results cannot be uploaded to the database. You can obtain your API key by creating an account at https://corebench.me and navigating to https://corebench.me/api.\nType nothing and press [ENTER] to ignore this message and proceed as usual without connecting to the internet.{colours.reset()}")
     
     key = input("=> ")
     key = key.strip()
 
     write_api_key(key)
 
-#send
-# s'il vous plaît exterminer la vermine mercy bookoooooooo
-# if you can find a way to optimise the loading times that would be good
-# i know it says GPU test in the notes, please do not make the GPU test because it requires pyCUDA and other cuda stuff that is beyond the storage limit for this account, I'll do it when I move to a collab or something idk
+def request_invalid_key():
+    clear()
+    print(f"{colours.red()}The API key you entered previously was invalid.\n{colours.reset()}Please enter your key: {colours.reset()}")
+    print(f"{colours.grey()}Without an API key, benchmark results cannot be uploaded to the database. You can obtain your API key by creating an account at https://corebench.me and navigating to https://corebench.me/api.\nType nothing and press [ENTER] to ignore this message and proceed as usual without connecting to the internet.{colours.reset()}")
 
+    key = input("=> ")
+    key = key.strip()
+
+    write_api_key(key)
 
 #TRY TO INITIATE THE DATA DIRECTORY
 try:
@@ -307,7 +317,7 @@ def getData():
             quit()
             
         #UPDATE THIS WITH EVERY VERSION
-        version = "1.5.3"
+        version = "1.6.0"
         #UPDATE THIS WITH EVERY VERSION
         
         endLoad = True
@@ -530,7 +540,7 @@ def calculateGFLOPS(stageNo, coreCount):
     p = psutil.Process(os.getpid())
     p.cpu_affinity(list(range(os.cpu_count())))
 
-    matrixSize = 1024 #number of iterations
+    matrixSize = 1024
 
     matrixA = np.random.rand(matrixSize, matrixSize)
     matrixB = np.random.rand(matrixSize, matrixSize)
@@ -538,7 +548,7 @@ def calculateGFLOPS(stageNo, coreCount):
     start = time.perf_counter()
 
     oldPercentageComplete = -1
-    iterations = 5000 #number of iterations
+    iterations = 2512 #number of iterations
 
     for _ in range(3):
         resultantMatrix = np.dot(matrixA,matrixB) # warmup avoiding CPU frequency scaling issues
@@ -556,7 +566,7 @@ def calculateGFLOPS(stageNo, coreCount):
             clear()
             buffer = []
             buffer.append(f"{colours.cyan()}Stage {stageNo}{colours.reset()} in progress...")
-            buffer.append("[{}{}-sS{}] {}% Done".format(colours.grey(),3,colours.reset(),int(round(percentageComplete))))
+            buffer.append("[{}{}-sC{}] {}% Done".format(colours.grey(),3,colours.reset(),int(round(percentageComplete))))
 
             if iterationGFLOPS:
                 buffer.append("------")
@@ -655,8 +665,7 @@ def singleCore(showResults):
 
     ballHeight = 5000 #metres
     
-    gravitationalEntropy = random.randint(-10,10)/10
-    acceleration = 9.81+gravitationalEntropy
+    acceleration = 9.81
     bounceConstant = random.randint(1, 10)
 
     timeSimulated = 0
@@ -751,9 +760,8 @@ def singleCore(showResults):
     percentageComplete = 0
 
     arrowHeight = 5000
-    
-    gravitationalEntropy = random.randint(-10,10)/10
-    acceleration = 9.81+gravitationalEntropy
+
+    acceleration = 9.81
 
     timeSimulated = 0
     timeIncrement = 1e-6
@@ -876,23 +884,22 @@ def get_physical_core_ids():
 
 #Full Load Test SUBROUTINES
 def fp_benchmark(data_chunk):
-    total = 0
+    arr = np.array(data_chunk, dtype=np.float64)
+    arr = arr[arr != 0]  # filter out zeros
 
-    for i in data_chunk:
-        if i == 0:
-            continue #funny bug lol
+    res = (
+        np.sin(arr) * np.cos(arr) +
+        np.log(arr + 1) * np.sqrt(arr) +
+        np.exp(arr % 10) +
+        np.array([math.factorial(int(x)) for x in arr % 10]) +
+        np.tan(arr / 3) * np.arctan(arr / 2) +
+        np.power(arr, 2) +
+        np.sqrt(np.abs(np.sin(arr))) +
+        np.log(np.abs(np.cos(arr) + 1)) +
+        np.sin(arr * 2) * np.cos(arr * 2)
+    )
 
-        total += math.sin(i) * math.cos(i) + \
-                 math.log(i + 1) * math.sqrt(i) + \
-                 math.exp(i % 10) + \
-                 math.factorial(i % 10) + \
-                 math.tan(i / 3) * math.atan(i / 2) + \
-                 math.pow(i, 2) + \
-                 math.sqrt(math.fabs(math.sin(i))) + \
-                 math.log(math.fabs(math.cos(i) + 1)) + \
-                 math.sin(i * 2) * math.cos(i * 2)
-
-    return total
+    return np.sum(res)
 
 def full_load_benchmark(func, data, num_cores, iterations=50):
     times = []
@@ -970,104 +977,99 @@ def full_load_intermission(gflops=0):
     return score
 #Full Load Test SUBROUTINES END
 
-def multiCore(showResults):     
+def multiCore(showResults):
+    print(f"Currently running the {colours.cyan()}multicore test{colours.reset()}.")
+    print("------")
+
     def intense1(threadNo, coreID):
         p = psutil.Process(os.getpid())
         p.cpu_affinity(coreID)
         print("[{}{}-rC{}] Crunching numbers...".format(colours.cyan(), threadNo, colours.reset()))
-
         arrowHeight = 500
-        
-        gravitationalEntropy = random.randint(-10,10)/10
-        ACCELERATION = 9.81+gravitationalEntropy
-
+        ACCELERATION = 9.81
         timeSimulated = 0
         timeIncrement = 1e-6
-
         yDistanceTravelled = 0
         xDistanceTravelled = 0
-
         yVel = 0
         xVel = 50
-
         timeToHit = math.sqrt(arrowHeight/(0.5*ACCELERATION))
-
         while yDistanceTravelled < arrowHeight:
-
             yVel = yVel - timeIncrement*ACCELERATION
-
-            timeSimulated+=timeIncrement
+            timeSimulated += timeIncrement
             yDistanceTravelled = 0.5 * ACCELERATION * timeSimulated**2
-
-            xDistanceTravelled = xVel*timeSimulated
-
-            angle = -math.atan2(yVel,xVel)*(180/math.pi) #radians to degrees
-            resultantVelocity = math.sqrt(yVel**2+xVel**2) #calculates the resultant velocity
-        
+            xDistanceTravelled = xVel * timeSimulated
+            angle = -math.atan2(yVel,xVel)*(180/math.pi)
+            resultantVelocity = math.sqrt(yVel**2+xVel**2)
         print("[{}{}-cC{}] Instance complete!".format(colours.green(), threadNo, colours.reset()))
-    
-    #checks for dynamic mode
-    if dynamicMode == True:
+
+    if dynamicMode:
         coreCount = int(systemCoreCount)
     else:
         coreCount = 6
 
-    #running process function (creates variable numbers of functions in dynamic mode)
-    
-    timeList = []
-
-    print(f"This one {colours.cyan()}generally{colours.reset()} doesn't take too long.")
-    print("------")
-
+    def worker(work_queue, core_id):
+        p = psutil.Process(os.getpid())
+        p.cpu_affinity([core_id])
+        while True:
+            try:
+                threadNo = work_queue.get_nowait()
+            except queue.Empty:
+                break
+            intense1(threadNo, [core_id])
+            work_queue.task_done()
 
     def run_processes():
         global testCoreCount, systemCoreCount, coreContext
-
         if dynamicMode:
             testCoreCount = os.cpu_count()
         else:
             testCoreCount = 12
 
-        processes = []
-
-        #validation process
         logical = os.cpu_count()
         coreList = get_physical_core_ids()
-
-        # if any core ID is invalid (>= logical), fallback
         if any(core >= logical for core in coreList):
             coreList = list(range(systemCoreCount))
 
-        for i in range(testCoreCount//2):
-            coreRun = coreList[i%len(coreList)]
+        work_queue = multiprocessing.JoinableQueue()
 
-            p = multiprocessing.Process(target=intense1, args=(i + 1, [coreRun]))
-            processes.append(p)
+        total_jobs = 36  # number of work items
+
+        for i in range(total_jobs):
+            work_queue.put(i + 1)  # threadNo or job id
+
+        processes = []
+
+        for i in range(testCoreCount//2):
+            coreRun = coreList[i % len(coreList)]
+            p = multiprocessing.Process(target=worker, args=(work_queue, coreRun))
             p.start()
+            processes.append(p)
+
+        work_queue.join()
 
         for p in processes:
             p.join()
-                    
 
-    for x in range(0,3):
-        start=time.perf_counter()
+    timeList = []
+    WORK_ITERATIONS = 1
 
-        if __name__ == "__main__":     
+    for x in range(WORK_ITERATIONS):
+        start = time.perf_counter()
+        if __name__ == "__main__":
             run_processes()
-
-        end=time.perf_counter()
-        Time = end-start
+        end = time.perf_counter()
+        Time = end - start
         timeList.append(Time)
 
-    totalTime = 0
-    for item in timeList:
-        totalTime+=item
+    totalTime = sum(timeList)
+    avgTime = totalTime / 3
 
-    avgTime = totalTime/3
     if not dynamicMode:
-        score = round((1/(avgTime/(math.e/1.8))*(math.e)*(1000*(1/math.log(coreCount-4,10))))/2)
+        score = round((1/(avgTime/(math.e/1.8))*(math.e)*(1000*math.e**2)/2))
     else:
-        score = round((1/(avgTime/(math.e/1.8))*(math.e)*(1000*(1/math.log(coreCount+0.1,10))))/2)   
+        score = round((1/(avgTime/(math.e/1.8))*(math.e)*(1000*(1/math.log(coreCount+0.1,10))))/2)  
+ 
     time.sleep(3)
     clear()
     gflops = calculateGFLOPS("2", coreCount)
@@ -1105,7 +1107,7 @@ def multiThread(showResults):
 
     def intense1(procNo, timeList, core_id, core_show, thread_id, thread_pass):
         p = psutil.Process(os.getpid())
-        p.cpu_affinity([core_id])  # Pin this process to specific core
+        p.cpu_affinity([core_id])
         print(f"[{colours.magenta()}{procNo}-rT{colours.reset()}-{colours.magenta()}[p]{thread_pass}{colours.reset()}] Crunching numbers...")
         ballHeight = 250
         acceleration = 9.81 + random.randint(-10, 10) / 10
@@ -1124,8 +1126,8 @@ def multiThread(showResults):
 
     def intense2(procNo, timeList, core_id, core_show, thread_id, thread_pass):
         p = psutil.Process(os.getpid())
-        p.cpu_affinity([core_id])  # Pin this process to specific core
-        print(f"[{colours.magenta()}{procNo}-rT{colours.reset()}-{colours.magenta()}[p]{thread_pass}{colours.reset()}] Crunching numbers...") # on core [{core_show}] thread [{thread_id}]
+        p.cpu_affinity([core_id])
+        print(f"[{colours.magenta()}{procNo}-rT{colours.reset()}-{colours.magenta()}[p]{thread_pass}{colours.reset()}] Crunching numbers...")
         arrowHeight = 250
         ACCELERATION = 9.81 + random.randint(-10, 10) / 10
         timeSimulated = 0
@@ -1146,46 +1148,46 @@ def multiThread(showResults):
     if dynamicMode:
         threadCount = Threads
     else:
-        threadCount = 12 
+        threadCount = 12
 
-    def run_processes():
-        with multiprocessing.Manager() as manager:
-            timeList = manager.list()
-            processes = []
+    def run_threads():
+        work_queue = queue.Queue()
+        timeList = []
+        timeList_lock = threading.Lock()
+        total_logical_threads = os.cpu_count()
+        total_jobs = 36
 
-            total_logical_threads = os.cpu_count()
-            logical_thread_ids = list(range(total_logical_threads))
-            #physical_cores = get_physical_core_ids()
-            #total_physical_cores = len(physical_cores)
-
-            thread_pass = 0
-
-            if dynamicMode:
-                threadCount = Threads
+        for i in range(total_jobs):
+            proc_no = i + 1
+            logical_id = i % total_logical_threads
+            core_show = logical_id // 2
+            thread_id = logical_id % 2
+            thread_pass = i // total_logical_threads
+            if proc_no % 2 == 0:
+                work_queue.put((intense1, proc_no, timeList, logical_id, core_show, thread_id, thread_pass))
             else:
-                threadCount = 12
+                work_queue.put((intense2, proc_no, timeList, logical_id, core_show, thread_id, thread_pass))
 
-            for i in range(threadCount):
-                #wrap around logical threads if there are fewer than 12
-                logical_id = logical_thread_ids[i % total_logical_threads]
+        def worker():
+            while True:
+                try:
+                    func, proc_no, timeList, logical_id, core_show, thread_id, thread_pass = work_queue.get(block=False)
+                except queue.Empty:
+                    break
+                func(proc_no, timeList, logical_id, core_show, thread_id, thread_pass)
+                work_queue.task_done()
 
-                core_show = logical_id // 2  #just for display
-                thread_id = logical_id % 2
-                proc_no = i + 1
-                thread_pass = i // total_logical_threads
+        threads = []
+        for _ in range(threadCount):
+            t = threading.Thread(target=worker)
+            t.start()
+            threads.append(t)
 
-                if proc_no % 2 == 0:
-                    p = multiprocessing.Process(target=intense2, args=(proc_no, timeList, logical_id, core_show, thread_id, thread_pass))
-                else:
-                    p = multiprocessing.Process(target=intense1, args=(proc_no, timeList, logical_id, core_show, thread_id, thread_pass))
+        work_queue.join()
+        for t in threads:
+            t.join()
 
-                processes.append(p)
-                p.start()
-
-            for p in processes:
-                p.join()
-
-            return list(timeList)
+        return timeList
 
     print(f"The {colours.red()}pain{colours.reset()} should be {colours.magenta()}over quickly{colours.reset()}...")
     print("------")
@@ -1193,9 +1195,10 @@ def multiThread(showResults):
     timeResults = []
 
     if __name__ == "__main__":
-        for _ in range(3):
+        WORK_ITERATIONS = 1
+        for _ in range(WORK_ITERATIONS):
             start = time.perf_counter()
-            timeList = run_processes()
+            timeList = run_threads()
             end = time.perf_counter()
             timeResults.append(end - start)
 
@@ -1206,6 +1209,7 @@ def multiThread(showResults):
         score = round((1/(avgTime/(math.e/1.5))*(math.e)*(1000*(1/math.log(threadCount,10)))))
     else:
         score = round((1/(avgTime/(math.e/1.5))*(math.e)*(1000*(1/math.log(threadCount-6,10)))))
+
     clear()
 
     if not dynamicMode and not fullTest:
@@ -1225,7 +1229,6 @@ def multiThread(showResults):
         print(f"{colours.cyan()}Multi thread score{colours.reset()}: {score} points")
 
     return score
-
 
 
 def fullCPUTest():
@@ -1273,6 +1276,7 @@ def fullCPUTest():
     if dynamicMode == True:
         print(f"{colours.grey()}DYNAMIC MODE IS ON{colours.reset()}")
         print("------")
+
     print(f"{colours.green()}Overall CPU Performance Test Complete!{colours.reset()} ({colours.grey()}{version}{colours.reset()})")
     print("------")
     print(f"{colours.magenta()}Total points scored{colours.reset()}: {totalScore} || (S:{singleCoreScore}, M:{multiCoreScore}, MT:{multiThreadScore})")
@@ -1361,7 +1365,23 @@ def fullCPUTest():
 
     ##Now we attempt to connect to the database
     if not dynamicMode and apikey:
-        upload_and_return_status(brandName, systemCoreCount, Threads, memRaw, singleCoreScore, multiCoreScore, multiThreadScore, gflops, fullLoadScore, finalScore, distroName, version, apikey)
+        status = upload_and_return_status(brandName, systemCoreCount, Threads, memRaw, singleCoreScore, multiCoreScore, multiThreadScore, gflops, fullLoadScore, finalScore, distroName, version, apikey)
+        
+        while "invalid api key" in status.lower():
+            request_invalid_key()
+
+            
+            if dynamicMode == True:
+                print(f"{colours.grey()}DYNAMIC MODE IS ON{colours.reset()}")
+                print("------")
+                
+            print(f"{colours.green()}Overall CPU Performance Test Complete!{colours.reset()} ({colours.grey()}{version}{colours.reset()})")
+            print("------")
+            print(f"{colours.magenta()}Total points scored{colours.reset()}: {totalScore} || (S:{singleCoreScore}, M:{multiCoreScore}, MT:{multiThreadScore})")
+            print(f"[{colours.cyan()}Overall score{colours.reset()}: {finalScore}]")
+
+            status = upload_and_return_status(brandName, systemCoreCount, Threads, memRaw, singleCoreScore, multiCoreScore, multiThreadScore, gflops, fullLoadScore, finalScore, distroName, version, return_api_key())
+
 
 def test_speed():
     try:
