@@ -20,6 +20,7 @@ import queue
 
 #Third-party packages
 import cpuinfo
+from numba import njit, prange
 import psutil
 import GPUtil
 import distro
@@ -46,6 +47,9 @@ def is_connected():
             return True
         
     except requests.ConnectionError:
+        return False
+
+    except:
         return False
 
 
@@ -317,7 +321,7 @@ def getData():
             quit()
             
         #UPDATE THIS WITH EVERY VERSION
-        version = "1.6.0"
+        version = "1.6.1"
         #UPDATE THIS WITH EVERY VERSION
         
         endLoad = True
@@ -1099,56 +1103,51 @@ def multiCore(showResults):
 
     return score, gflops, full_load_score
 
+@njit(nogil=True)
+def run_simulation(ballHeight=1000.0, acceleration=9.81, dt=1e-6):
+    t = 0.0
+    y = 0.0
+    vy = 0.0
+    x = 0.0
+    vx = 50.0
+    total = 0.0
+
+    # bounce multiple times to increase load
+    for bounce in range(10):
+        y = 0.0
+        t = 0.0
+        vy = 0.0
+        while y < ballHeight:
+            vy -= acceleration * dt
+            t += dt
+            y = 0.5 * acceleration * t * t
+            x += vx * dt
+
+            # additional stress
+            angle = math.atan2(vy, vx)
+            mag = math.sqrt(vy**2 + vx**2)
+            total += math.sin(angle) * mag + math.cos(angle) * mag
+
+    return total
 
 def multiThread(showResults):
     logical_cores = os.cpu_count()
     p = psutil.Process(os.getpid())
     p.cpu_affinity(list(range(logical_cores)))
 
-    def intense1(procNo, timeList, core_id, core_show, thread_id, thread_pass):
-        p = psutil.Process(os.getpid())
-        p.cpu_affinity([core_id])
-        print(f"[{colours.magenta()}{procNo}-rT{colours.reset()}-{colours.magenta()}[p]{thread_pass}{colours.reset()}] Crunching numbers...")
-        ballHeight = 250
-        acceleration = 9.81 + random.randint(-10, 10) / 10
-        ballConstant = random.randint(1, 10)
-        timeSimulated = 0
-        timeIncrement = 1e-6
-        distanceTravelled = 0
-        yVel = 0
-        while distanceTravelled < ballHeight:
-            yVel -= timeIncrement * acceleration
-            timeSimulated += timeIncrement
-            distanceTravelled = 0.5 * acceleration * timeSimulated**2
-        yVel = -yVel - ballConstant
-        timeList.append(timeSimulated)
-        print(f"[{colours.green()}{procNo}-cT{colours.reset()}] Instance complete!")
-
-    def intense2(procNo, timeList, core_id, core_show, thread_id, thread_pass):
-        p = psutil.Process(os.getpid())
-        p.cpu_affinity([core_id])
-        print(f"[{colours.magenta()}{procNo}-rT{colours.reset()}-{colours.magenta()}[p]{thread_pass}{colours.reset()}] Crunching numbers...")
-        arrowHeight = 250
-        ACCELERATION = 9.81 + random.randint(-10, 10) / 10
-        timeSimulated = 0
-        timeIncrement = 1e-6
-        yDistanceTravelled = 0
-        xVel = 50
-        yVel = 0
-        while yDistanceTravelled < arrowHeight:
-            yVel -= timeIncrement * ACCELERATION
-            timeSimulated += timeIncrement
-            yDistanceTravelled = 0.5 * ACCELERATION * timeSimulated**2
-            xDistanceTravelled = xVel * timeSimulated
-            angle = -math.atan2(yVel, xVel) * (180 / math.pi)
-            resultantVelocity = math.sqrt(yVel**2 + xVel**2)
-        timeList.append(timeSimulated)
-        print(f"[{colours.green()}{procNo}-cT{colours.reset()}] Instance complete!")
-
     if dynamicMode:
         threadCount = Threads
     else:
         threadCount = 12
+
+    def intense_thread(procNo, timeList, core_id, core_show, thread_id, thread_pass, timeList_lock):
+        p = psutil.Process(os.getpid())
+        p.cpu_affinity([core_id])
+        print(f"[{colours.magenta()}{procNo}-rT{colours.reset()}-{colours.magenta()}[p]{thread_pass}{colours.reset()}] Crunching numbers...")
+        result = run_simulation()
+        with timeList_lock:
+            timeList.append(result)
+        print(f"[{colours.green()}{procNo}-cT{colours.reset()}] Instance complete!")
 
     def run_threads():
         work_queue = queue.Queue()
@@ -1163,18 +1162,15 @@ def multiThread(showResults):
             core_show = logical_id // 2
             thread_id = logical_id % 2
             thread_pass = i // total_logical_threads
-            if proc_no % 2 == 0:
-                work_queue.put((intense1, proc_no, timeList, logical_id, core_show, thread_id, thread_pass))
-            else:
-                work_queue.put((intense2, proc_no, timeList, logical_id, core_show, thread_id, thread_pass))
+            work_queue.put((proc_no, logical_id, core_show, thread_id, thread_pass))
 
         def worker():
             while True:
                 try:
-                    func, proc_no, timeList, logical_id, core_show, thread_id, thread_pass = work_queue.get(block=False)
+                    proc_no, logical_id, core_show, thread_id, thread_pass = work_queue.get(block=False)
                 except queue.Empty:
                     break
-                func(proc_no, timeList, logical_id, core_show, thread_id, thread_pass)
+                intense_thread(proc_no, timeList, logical_id, core_show, thread_id, thread_pass, timeList_lock)
                 work_queue.task_done()
 
         threads = []
@@ -1206,9 +1202,9 @@ def multiThread(showResults):
     avgTime = totalTime / 3
 
     if dynamicMode:
-        score = round((1/(avgTime/(math.e/1.5))*(math.e)*(1000*(1/math.log(threadCount,10)))))
+        score = round((1 / (avgTime / (math.e / 1.5)) * (math.e) * (1000 * (1 / math.log(threadCount, 10)))))
     else:
-        score = round((1/(avgTime/(math.e/1.5))*(math.e)*(1000*(1/math.log(threadCount-6,10)))))
+        score = round(((1 / (avgTime / (math.e / 1.5)) * (math.e) * (1000 * math.e*1.5))))
 
     clear()
 
@@ -1367,7 +1363,12 @@ def fullCPUTest():
     if not dynamicMode and apikey:
         status = upload_and_return_status(brandName, systemCoreCount, Threads, memRaw, singleCoreScore, multiCoreScore, multiThreadScore, gflops, fullLoadScore, finalScore, distroName, version, apikey)
         
-        while "invalid api key" in status.lower():
+        status = str(status)
+
+        if not status:
+            status = ""
+
+        while "invalid api key" in status.lower() and return_api_key():
             request_invalid_key()
 
             
