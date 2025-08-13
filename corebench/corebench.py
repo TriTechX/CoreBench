@@ -321,7 +321,7 @@ def getData():
             quit()
             
         #UPDATE THIS WITH EVERY VERSION
-        version = "1.6.1"
+        version = "1.6.2"
         #UPDATE THIS WITH EVERY VERSION
         
         endLoad = True
@@ -337,13 +337,15 @@ def loadingScreen():
     #SELECT LOADING MESSAGE
     messages = ["So, you're back...", "Hello there!", "It's hot in here...", "400FPS", "Disabling frame generation...", 
                 "RTX ON", "Removing nanites...", "Stealing your personal information...", "Pro tip: bench", 
-                "Sussy Bucket", "No standard users allowed!", "Connecting to the (totally functional) CoreBench database...",
+                "Sussy Bucket", "No standard users allowed!", "We've got a website, did you hear? https://www.corebench.me",
                 "Getting more ping...", "Optimizing...", "Initiating...", "WELCOME.", f"Here with your {brandName} I see...", f"{osName}? A fellow man of culture...",
                     f"Eating all {memRaw}MB of RAM...", "Overclocking...", "Deleting main.py...", "Always remember to remove the French language pack!", 
                     f"Not much of a {osName} fan myself, but you do you...", f"Welcome back {hostname}.", f"Haha! Got your IP! Seriously! {localIp}", "I use Arch btw",
                     "I use Core btw", "Over 6GHz!", "Bringing out the Intel Pentium...", "Gathering texel fillrate...", "Collecting frames...", "No fake frames here!",
                         "Changing boot order...", "Imagine if you were using this on Windows lol", "No longer held prisoner by Replit!", "It's dangerous to go alone.", 
-                        "All your bench are belong to us.", "GPU bench coming soon. Maybe.", "Unused RAM is useless RAM. Give some to me."]
+                        "All your bench are belong to us.", "GPU bench coming soon. Maybe.", "Unused RAM is useless RAM. Give some to me.",
+                        "ThinkPad is the only Pad", "Hoarding FPS...", "Super Accurate™!", "HEY THERE BUDDY PAL", "Jimmy smiles upon you.",
+                        "Remember to enable XMP...", "Ryzen 4070", "GPU test coming never!", "Glorp"]
     message = messages[random.randint(0,len(messages)-1)]
 
     try:
@@ -741,7 +743,7 @@ def singleCore(showResults):
     totalTime = end-start
     avgTime = (end-start)/3
 
-    score = round((1/(avgTime/(3*math.e)))*(math.e)*(1000*(1/math.log(testCoreCount+4,10))))
+    score = round(78_330/totalTime)
 
     allPassTimeAvg = sum(timeList)/3
     allPassTimeAvg = float(str(allPassTimeAvg).rstrip("0").rstrip("."))
@@ -815,7 +817,7 @@ def singleCore(showResults):
                     buffer.append(f"{colours.magenta()}Time simulated{colours.reset()}: {round(timeSimulated,2)}s")
                     buffer.append(f"{colours.magenta()}Resultant velocity{colours.reset()}: {round(resultantVelocity,2)}m/s")
                     buffer.append("---")
-                    buffer.append(f"{colours.magenta()}Time elapsed{colours.reset()}: {int(round(timeElapsed))}")
+                    buffer.append(f"{colours.magenta()}Time elapsed{colours.reset()}: {int(round(timeElapsed))}s")
                     print("\n".join(buffer))
                 except:
                     pass
@@ -835,10 +837,13 @@ def singleCore(showResults):
 
     totalTime = end-start
     avgTime = (end-start)/3
-    score = round((1/(avgTime/(3*math.e)))*(math.e)*(1000*(1/math.log(testCoreCount+4,10))))
+
+    score = round(90_300/totalTime)
 
     print("---")
     print(f"{colours.green()}Stage 2 complete{colours.reset()}.")
+
+    print(totalTime)
 
     scoreList.append(score)
     timeList.append(totalTime)
@@ -848,6 +853,7 @@ def singleCore(showResults):
     clear()
 
     score = int(round(sum(scoreList)/2))
+
     totalTime = sum(timeList)
     
     if not dynamicMode and not fullTest:
@@ -982,9 +988,6 @@ def full_load_intermission(gflops=0):
 #Full Load Test SUBROUTINES END
 
 def multiCore(showResults):
-    print(f"Currently running the {colours.cyan()}multicore test{colours.reset()}.")
-    print("------")
-
     def intense1(threadNo, coreID):
         p = psutil.Process(os.getpid())
         p.cpu_affinity(coreID)
@@ -1037,7 +1040,7 @@ def multiCore(showResults):
 
         work_queue = multiprocessing.JoinableQueue()
 
-        total_jobs = 36  # number of work items
+        total_jobs = 96
 
         for i in range(total_jobs):
             work_queue.put(i + 1)  # threadNo or job id
@@ -1055,26 +1058,36 @@ def multiCore(showResults):
         for p in processes:
             p.join()
 
+    WORK_ITERATIONS = 3
     timeList = []
-    WORK_ITERATIONS = 1
 
     for x in range(WORK_ITERATIONS):
-        start = time.perf_counter()
         if __name__ == "__main__":
+            clear()
+
+            print(f"{colours.cyan()}Multi Core Test{colours.reset()} - Iteration {x+1}")
+            print("------")
+
+            start = time.perf_counter()
             run_processes()
-        end = time.perf_counter()
-        Time = end - start
-        timeList.append(Time)
+            end = time.perf_counter()
+
+            timeList.append(end-start)
+            
+            print(f"-- {colours.green()}Iteration {x+1} complete!{colours.reset()} --")
+            time.sleep(3)
 
     totalTime = sum(timeList)
-    avgTime = totalTime / 3
+    avgTime = totalTime / (WORK_ITERATIONS*4)
 
-    if not dynamicMode:
-        score = round((1/(avgTime/(math.e/1.8))*(math.e)*(1000*math.e**2)/2))
-    else:
-        score = round((1/(avgTime/(math.e/1.8))*(math.e)*(1000*(1/math.log(coreCount+0.1,10))))/2)  
- 
-    time.sleep(3)
+    score = round(23430/avgTime) #constant determined after many tests with modern 6 core processors
+    #11.715 seconds
+    
+    print("------")
+    print(f"Score: {colours.cyan()}{score}{colours.reset()}")
+
+    time.sleep(5)
+
     clear()
     gflops = calculateGFLOPS("2", coreCount)
     time.sleep(3)
@@ -1154,7 +1167,7 @@ def multiThread(showResults):
         timeList = []
         timeList_lock = threading.Lock()
         total_logical_threads = os.cpu_count()
-        total_jobs = 36
+        total_jobs = 96
 
         for i in range(total_jobs):
             proc_no = i + 1
@@ -1185,26 +1198,33 @@ def multiThread(showResults):
 
         return timeList
 
-    print(f"The {colours.red()}pain{colours.reset()} should be {colours.magenta()}over quickly{colours.reset()}...")
-    print("------")
-
     timeResults = []
 
     if __name__ == "__main__":
-        WORK_ITERATIONS = 1
-        for _ in range(WORK_ITERATIONS):
-            start = time.perf_counter()
-            timeList = run_threads()
-            end = time.perf_counter()
-            timeResults.append(end - start)
+        WORK_ITERATIONS = 3
+        for x in range(0, 3):
+            clear()
+
+            print(f"{colours.magenta()}Multi Thread Test{colours.reset()} - Iteration {x+1}")
+            print("------")
+
+            for _ in range(WORK_ITERATIONS):
+
+                start = time.perf_counter()
+
+                run_threads()
+
+                end = time.perf_counter()
+                timeResults.append(end - start)
+
+                time.sleep(3)
+
+            print(f"-- {colours.green()}Iteration {x+1} complete!{colours.reset()} --")
 
     totalTime = sum(timeResults)
-    avgTime = totalTime / 3
+    avgTime = (totalTime / (3 * WORK_ITERATIONS))/3
 
-    if dynamicMode:
-        score = round((1 / (avgTime / (math.e / 1.5)) * (math.e) * (1000 * (1 / math.log(threadCount, 10)))))
-    else:
-        score = round(((1 / (avgTime / (math.e / 1.5)) * (math.e) * (1000 * math.e*1.5))))
+    score = round(33400/avgTime) #constant
 
     clear()
 
