@@ -30,3 +30,6 @@ def reset():
 
 def grey():
     return "\033[90m"
+
+def light_grey():
+    return "\033[90m"

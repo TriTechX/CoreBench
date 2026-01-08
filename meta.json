@@ -1,6 +1,6 @@
 {"repo_name":"corebench",
   "package_name":"corebench",
-  "version":"1.3.3",
+  "version":"1.7.0",
   "python":"true",
   "requirements":"corebench/requirements.txt",
   "linuxrequirements":["neofetch", "xdg-utils"],
