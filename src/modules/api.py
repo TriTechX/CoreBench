@@ -1,3 +1,17 @@
+# api.py
+"""
+Module for API integration.
+
+Used for communicating with CoreBench's servers,
+uploading benchmark results, and managing the local
+API key.
+
+author: T. de R-R
+license: Apache-2.0
+date: 05.12.26
+"""
+# modules/api.py
+
 import requests, os, hashlib, sys
 import os
 import hashlib

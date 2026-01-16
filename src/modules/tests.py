@@ -1,3 +1,14 @@
+# tests.py
+"""
+Contains abstracted wrappers for the full tests
+for each CPU aspect.
+
+author: T. de R-R
+license: Apache-2.0
+date: 05.12.26
+"""
+# modules/tests.py
+
 import os
 import time
 import psutil

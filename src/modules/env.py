@@ -1,3 +1,13 @@
+# env.py
+"""
+Contains all global variables used by many scripts.
+
+author: T. de R-R
+license: Apache-2.0
+date: 05.12.26
+"""
+# modules/env.py
+
 import os
 from . import colours, tests, utils, api
 

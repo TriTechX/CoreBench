@@ -1,6 +1,16 @@
-### imports
+# corebench.py
+"""
+The main entry point for CoreBench.
 
-## built in
+Executing this script starts the program 
+depending on execution context.
+
+author: T. de R-R
+license: Apache-2.0
+date: 05.12.25
+"""
+# corebench.py
+
 import time, os, socket, multiprocessing, \
         threading, math, platform, random, \
         subprocess, re, getpass, csv, sys, \
@@ -9,13 +19,11 @@ import time, os, socket, multiprocessing, \
 
 from datetime import datetime
 
-## third party
 import cpuinfo, psutil, GPUtil, distro, \
         speedtest, matplotlib as mpl, \
         matplotlib.pyplot as plt, numpy as np, \
         requests
 
-# initiate
 mpl.use("Agg")
 
 ## corebench utils
@@ -87,27 +95,23 @@ def initiate():
                         sc - single core test,
                         mt - multithread test)""")
 
-    # # Argument 2
-    # parser.add_argument("--d", action="store_true", help="Enable dynamic mode")
-
-    # # Argument 2
-    # parser.add_argument("--r", action="store_true", help="Show test results after the test has completed.")
-
     # Argument 2 (secret)
     parser.add_argument(
         "--m",
         action="store_true",
         help="This is used by the initialisation bash script as an indicator to run the full application. Not recommended to pass as a terminal argument without being in the CoreBench virtual environment."
         )
-
+    
+    # Argument 3 - for developers that want to zip their CoreBench version
     parser.add_argument(
         "--b",
         nargs="?",
         const=f"CoreBench-v{utils.remove_char(env.version, '.')}.zip",
-        default=f"CoreBench-v{utils.remove_char(env.version, '.')}.zip",
+        default=False,
         help="Compress a CoreBench redistributable 'build'"
     )
 
+    # parse the args from execution
     args=parser.parse_args()
 
     if args.m:

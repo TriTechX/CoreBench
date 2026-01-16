@@ -1,3 +1,13 @@
+# colours.py
+"""
+Returns ANSI escape codes for colours.
+
+author: T. de R-R
+license: Apache-2.0
+date: 31.12.24
+"""
+# modules/colours.py
+
 def black():
     return "\033[30m"
 

@@ -1,4 +1,13 @@
 @echo off
+REM ========================
+REM CoreBench runner file
+REM author: T. de R-R
+REM license: Apache-2.0
+REM date: 07.01.26
+REM ========================
+REM ../corebench.bat
+
+REM variables are made local to the script and evaluated at execution time
 setlocal ENABLEDELAYEDEXPANSION
 
 REM ensure local dir
@@ -14,6 +23,8 @@ REM Ensure Python 3.14
 echo %INFO% Ensuring Python 3.14 is installed...
 
 py -3.14 -c "import sys" >nul 2>&1
+
+REM !=
 IF %ERRORLEVEL% NEQ 0 (
     echo %INFO% Python 3.14 not detected. Installing, elevation may be required...
 

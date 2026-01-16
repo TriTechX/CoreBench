@@ -1,3 +1,13 @@
+# build.py
+"""
+For building CoreBench as a redistributable archive.
+
+author: T. de R-R
+license: Apache-2.0
+date: 07.01.26
+"""
+# modules/build.py
+
 import zipfile, os
 
 def zip_release(output_zip: str = "build.zip"):

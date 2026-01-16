@@ -1,3 +1,13 @@
+# utils.py
+"""
+Contains generic functions for common use.
+
+author: T. de R-R
+license: Apache-2.0
+date: 05.12.26
+"""
+# modules/utils.py
+
 import sys, subprocess, os, re, distro, io, socket, GPUtil, cpuinfo, platform, psutil, math, getpass, threading, requests
 from . import colours, loading, api
 

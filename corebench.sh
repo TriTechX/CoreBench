@@ -1,4 +1,12 @@
 #!/bin/bash
+#
+# CoreBench runner script
+#
+# Author: T. de R-R
+# License: Apache-2.0
+# Date: 07.01.26
+#
+# ../corebench.sh
 
 # Colors
 INFO="\033[90m" # grey

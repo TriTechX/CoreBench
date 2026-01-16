@@ -1,3 +1,15 @@
+# loading.py
+"""
+Manages the loading screen on startup.
+
+Waits for the external flag finished_loading is True.
+
+author: T. de R-R
+license: Apache-2.0
+date: ??.01.26
+"""
+# modules/loading.py
+
 from . import utils, colours
 import random, time
 
@@ -10,9 +22,10 @@ def show_loading_screen():
     Void function
     """
 
+    # start up messages to add some personality :)
     messages = ["So, you're back...", "Hello there!", "It's hot in here...", "400FPS", "Disabling frame generation...", 
                 "RTX ON", "Removing nanites...", "Stealing your personal information...", "Pro tip: bench", 
-                "Sussy Bucket", "No standard users allowed!", "We've got a website, did you hear? https://www.corebench.me",
+                "Sussy Bucket", "Only cool people allowed!", "We've got a website, did you hear? https://www.corebench.me",
                 "Getting more ping...", "Optimizing...", "Initiating...", "WELCOME.", "Deleting main.py...", "Always remember to remove the French language pack!", "I use Arch btw",
                 "I use Core btw", "Over 6GHz!", "Bringing out the Intel Pentium...", "Gathering texel fillrate...", "Collecting frames...", "No fake frames here!",
                 "Changing boot order...", "Imagine if you were using this on Windows lol", "No longer held prisoner by Replit!", "It's dangerous to go alone.", 

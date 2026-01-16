@@ -1,3 +1,13 @@
+# test_helpers.py
+"""
+Contains most of the algorithms used for benchmarking.
+
+author: T. de R-R
+license: Apache-2.0
+date: 05.12.26
+"""
+# modules/test_helpers.py
+
 import time, threading, psutil, random, shutil, math, os, hashlib, zlib, numpy, multiprocessing, io, queue
 from tqdm import tqdm
 

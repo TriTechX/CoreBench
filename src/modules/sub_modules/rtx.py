@@ -1,3 +1,14 @@
+# rtx.py
+"""
+Used by the various ray tracing benchmarks to
+simulate ray tracing.
+
+author: T. de R-R
+license: Apache-2.0
+date: 06.12.25
+"""
+# modules/sub_modules/rtx.py
+
 import math, time, os, multiprocessing
 from PIL import Image
 
