@@ -21,6 +21,7 @@ import time
 from . import colours, utils
 
 def is_connected() -> bool:
+    from . import env
     """
         Sends a get request to the Corebench server to
         see if it is online and determine whether it's worth
@@ -32,7 +33,7 @@ def is_connected() -> bool:
 
     try:
         # Send the get request
-        response = requests.get("https://corebench.me", timeout=5)
+        response = requests.get(env.website_ip, timeout=5)
 
         # Response is 200, connection successful
         if response.status_code == 200:
@@ -132,7 +133,7 @@ def get_file_hash():
         Compute the sha256 hash of the .env module.
 
         Returns:
-            sha256.hexdigest(): str - the hash of the main script
+            sha256.hexdigest(): str - the hash of the env script
     """
     # Create the sha256 object
     sha256 = hashlib.sha256()
@@ -252,6 +253,8 @@ def send_data_for_auth(
         json=data,
         headers=headers
     )
+
+    return response
 
 def validate_api_key(api_key: str) -> requests.Response:
     from . import env
@@ -373,10 +376,39 @@ def upload_and_return_status(
         else:
             # 403 = forbidden, invalid API key, banned, or rate-limited
             # detail will describe the issue specifically
-            print(f"{colours.red()}{response.json()["detail"]}{colours.reset()}")
+            print(f"{colours.red()}{colours.bold()}An error ocurred: {colours.reset()}{colours.red()}{response.json()["detail"]}{colours.reset()}")
 
-        return response.json()["detail"]
+        return response.json().get("detail")
     
     except Exception as e:
         # Notify the user that the server disconnected or the connection failed
         print(f"{colours.grey()}The server is offline.{colours.reset()}")
+        print(e)
+
+
+def send_test_data():
+    """
+    Send a test data payload to the Auth server.
+    Used for debugging/connection tests.
+    """
+    # tell the user API has initialised
+    print("Sending payload...")
+    # upload the test data to the server
+    status = upload_and_return_status(
+        cpu_name="Test CPU",
+        core_count=4,
+        thread_count=8,
+        memory_megabytes=8192,
+        single_core_score=1000,
+        multi_core_score=1000,
+        multi_thread_score=1000,
+        gigaflops_score=100,
+        full_load_score=1000,
+        overall_score=1000,
+        distribution_name="Test OS",
+        api_key="jeff"
+    )
+
+    print("------")
+
+    # void function, no need to return data
