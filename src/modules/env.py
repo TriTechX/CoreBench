@@ -13,9 +13,10 @@ from . import colours, tests, utils, api
 
 home_directory = os.getcwd()
 api_key_filename = "apikey.txt"
-version = "1.7.1"
+version = "1.7.2"
 
 auth_server_ip = "https://corebench.me/submit"
+website_ip = "https://corebench.me"
 
 prompt_string = "=>"
 data_folder_path = "../DATA"
